@@ -97,6 +97,15 @@ The app is built around an exam lifecycle rather than a generic CRUD app:
 ## When in doubt
 
 Prefer reading the relevant route, Prisma model, and matching UI/test file together before changing behavior. This project’s features are intentionally spread across multiple layers, and the correct fix usually requires understanding the interaction between the API, the database schema, and the exam client.
+
+## Automatic production deployment
+
+- After completing a change the user requested in this repository, run the relevant checks and, if they pass, commit the changes you made and push them to `main` so Vercel can deploy them. Do not ask for separate confirmation before committing or pushing.
+- Review `git status` and the staged diff first. Stage only files changed for the current request; never include unrelated user changes, generated files, local environment files, credentials, or secrets. If changes cannot be safely separated, stop and ask the user.
+- Do not commit or push if relevant checks fail, the change is incomplete, the push would require overwriting remote history, or the repository state is otherwise unsafe. Explain the blocker and ask the user how to proceed.
+- Use a concise commit message. After pushing, confirm the branch and commit; report any deployment status only when verified.
+- If the user asks not to publish a particular change, respect that request.
+
 ## Mandatory Test-Driven Debugging and Automatic Repair
 
 Whenever you create, execute, or modify tests using Vitest, Jest, React Testing Library, Playwright, Cypress, or any other testing framework, you MUST follow this iterative testing and repair workflow.
