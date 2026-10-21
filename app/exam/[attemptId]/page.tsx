@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
-import ExamClient from './exam-client';
+import ExamClient from '../exam/exam-client';
 
 export const dynamic = 'force-dynamic';
 
