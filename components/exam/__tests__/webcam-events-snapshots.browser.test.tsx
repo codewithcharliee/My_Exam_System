@@ -803,7 +803,7 @@ describe('H11 — webcam, browser events and snapshots', () => {
         value: { getUserMedia: vi.fn(async () => stream) },
       });
 
-      const imageData = 'data:image/jpeg;base64,d2ViY2FtLWZyYW1l';
+      const imageData = 'data:image/webp;base64,d2ViY2FtLWZyYW1l';
       const drawImage = vi.fn();
       const canvasContext = {
         drawImage,
@@ -811,7 +811,7 @@ describe('H11 — webcam, browser events and snapshots', () => {
         fillText: vi.fn(),
       } as unknown as CanvasRenderingContext2D;
       vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(canvasContext);
-      vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(imageData);
+      const toDataURL = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(imageData);
 
       setSession('candidate-001', 'candidate');
       rendered = await render(h(MonitoringFixture, {
@@ -838,6 +838,7 @@ describe('H11 — webcam, browser events and snapshots', () => {
       video.dispatchEvent(new Event('loadeddata'));
       await vi.waitFor(() => expect(mockData.snapshots).toHaveLength(1));
 
+      expect(toDataURL).toHaveBeenCalledWith('image/webp', 0.6);
       expect(drawImage).toHaveBeenCalledWith(video, 0, 0, 320, 240);
       expect(mockData.snapshots[0]).toMatchObject({
         attemptId: 'attempt-001',

@@ -226,7 +226,7 @@ export function useWebcam({
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Unable to create a canvas for snapshot capture');
       ctx.drawImage(video, 0, 0, 320, 240);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      const dataUrl = canvas.toDataURL('image/webp', 0.6);
 
       const eventResponse = await fetch('/api/monitoring/events', {
         method: 'POST',

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -146,7 +147,7 @@ export default function MonitoringPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {(snapshots ?? []).map((snap: any) => (
                   <div key={snap.id} className="border rounded-lg overflow-hidden">
-                    {snap?.imageData && <img src={snap.imageData} alt="Snapshot" className="w-full aspect-video object-cover" />}
+                    {snap?.imageData && <Image src={snap.imageData} alt="Candidate monitoring snapshot" width={320} height={240} unoptimized loading="lazy" decoding="async" className="aspect-video w-full object-cover" />}
                     <div className="p-2 text-xs text-muted-foreground">
                       <SafeDate date={snap?.takenAt} options={{ timeStyle: 'medium' }} />
                       {snap?.monitoringEvent?.eventType && (

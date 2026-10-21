@@ -96,7 +96,11 @@ The app is built around an exam lifecycle rather than a generic CRUD app:
 
 ## Lighthouse quality target
 
-- Treat 100 in Lighthouse Performance, Accessibility, Best Practices, and SEO as the target for representative public and authenticated routes. After changes that can affect user-facing pages, run clean audits with extensions disabled on affected routes and compare them with the previous baseline.
+- Treat 100 in Lighthouse Performance, Accessibility, Best Practices, and SEO as the target for representative public and authenticated routes. After changes that can affect user-facing pages, run clean mobile and desktop audits with extensions disabled on affected routes and compare them with the previous baseline.
+- Track Core Web Vitals alongside the score: target LCP at or below 2.5 seconds, INP at or below 200 ms, and CLS below 0.1. Use field data when available; a lab Lighthouse run does not measure real-user INP.
+- Optimize images based on rendered use: use Next.js `Image` for static and remote assets, include accurate dimensions or aspect ratios, serve responsive modern formats through the image optimizer, prioritize only the measured above-the-fold LCP image, and lazy-load below-the-fold images. Keep compatible social-preview formats when required. Preserve dimensions and use lazy decoding for browser-generated or data-URL evidence images.
+- Keep the existing self-hosted `next/font` setup, limit preloads to fonts used above the fold, and preserve font-display fallback behavior. Split heavy client code only when route-level measurements justify it; defer non-critical third-party scripts through supported Next.js APIs.
+- Let Next.js manage route scripts, stylesheet delivery, and critical CSS. Do not manually inline CSS or add `async`/`defer` to framework-owned scripts as an unmeasured workaround.
 - Fix actionable regressions before deployment; optimize assets based on measured impact, and preserve accessibility, responsive behavior, and application functionality while improving scores.
 - Lighthouse scores vary with network, browser, hosting, and test conditions. Never claim or guarantee a fixed score when it cannot be reproduced; report the exact audit conditions, results, and any external or non-actionable limits.
 

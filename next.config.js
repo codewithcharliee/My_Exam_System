@@ -10,7 +10,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: { unoptimized: true },
   // Dev chunk URLs are not content-hashed, so a cached copy outlives an edit.
   async headers() {
     if (process.env.NODE_ENV !== 'development') return [];
