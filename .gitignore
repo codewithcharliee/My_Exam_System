@@ -1,0 +1,14 @@
+node_modules
+.next
+.vitest
+coverage
+playwright-report
+test-results
+.env
+.env.*
+!.env.example
+!.env.local.example
+.neon
+*.tsbuildinfo
+.vercel/
+*.log

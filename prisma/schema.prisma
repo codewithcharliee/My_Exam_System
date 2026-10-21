@@ -1,0 +1,613 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum UserRole {
+  admin
+  exam_officer
+  lecturer
+  invigilator
+  candidate
+}
+
+enum CourseSemester {
+  first
+  second
+  full_year
+
+  @@map("course_semester")
+}
+
+enum AccountStatus {
+  active
+  inactive
+  suspended
+}
+
+enum QuestionStatus {
+  draft
+  approved
+}
+
+enum QuestionType {
+  multiple_choice
+  short_answer
+  essay
+  legal_problem
+  case_analysis
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+}
+
+enum MarkingMethod {
+  exact_match
+  marking_points
+  ai_recommendation
+  human_grading
+  acceptable_answer
+}
+
+enum AssessmentType {
+  test
+  exam
+}
+
+enum AssessmentStatus {
+  draft
+  published
+  closed
+  archived
+}
+
+enum AttemptStatus {
+  not_started
+  in_progress
+  submitted
+  auto_submitted_violation
+  timed_out
+  abandoned
+  reset
+}
+
+enum SyncStatus {
+  local
+  syncing
+  synced
+  pending_offline
+}
+
+enum SaveType {
+  autosave
+  manual
+  sync
+  submit
+}
+
+enum GradeDecisionAction {
+  pending
+  accepted
+  modified
+  rejected
+  replaced
+}
+
+enum ResultStatus {
+  pending
+  graded
+  released
+}
+
+enum AiRequestType {
+  question_generation
+  assessment_recommendation
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String
+  email         String        @unique
+  matricNumber  String?       @unique @map("matric_number")
+  academicLevel Int?          @map("academic_level")
+  staffTitle    String?       @map("staff_title")
+  passwordHash  String        @map("password_hash")
+  role          UserRole      @default(candidate)
+  accountStatus AccountStatus @default(active) @map("account_status")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  userCourses             UserCourse[]
+  questionsCreated        Question[]
+  assessments             Assessment[]
+  attempts                Attempt[]
+  gradeDecisions          GradeDecision[]
+  releasedResults         Result[]          @relation("ReleasedBy")
+  monitoringReviews       MonitoringEvent[] @relation("ReviewedBy")
+  snapshotViews           Snapshot[]        @relation("ViewedBy")
+  auditEvents             AuditEvent[]      @relation("AuditActor")
+  readinessChecks         ReadinessCheck[]
+  practiceAttempts        PracticeAttempt[]
+  timeAdjustmentsApproved TimeAdjustment[]  @relation("ApprovedBy")
+  timeAdjustments         TimeAdjustment[]  @relation("CandidateAdjustments")
+  aiRequests              AiRequest[]
+  issueReports            IssueReport[]
+  acknowledgedIssues      IssueReport[]     @relation("IssueAcknowledgedBy")
+
+  @@map("users")
+}
+
+model Course {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  title     String
+  level     String   @default("LLB")
+  semester  CourseSemester? @map("semester")
+  isElective Boolean  @default(false) @map("is_elective")
+  creditUnits Int?    @map("credit_units")
+  catalogSource String? @map("catalog_source")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userCourses UserCourse[]
+  questions   Question[]
+  assessments Assessment[]
+
+  @@map("courses")
+}
+
+model UserCourse {
+  id       String   @id @default(cuid())
+  userId   String   @map("user_id")
+  courseId String   @map("course_id")
+  role     UserRole
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("user_courses")
+}
+
+model Question {
+  id         String         @id @default(cuid())
+  courseId   String         @map("course_id")
+  type       QuestionType
+  text       String
+  status     QuestionStatus @default(approved)
+  wordLimit  Int?           @map("word_limit")
+  wordTarget Int?           @map("word_target")
+  difficulty Difficulty     @default(medium)
+  topic      String         @default("")
+  version    Int            @default(1)
+  createdBy  String         @map("created_by")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  course          Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator         User             @relation(fields: [createdBy], references: [id])
+  options         QuestionOption[]
+  answerKeys      AnswerKey[]
+  markingSchemes  MarkingScheme[]
+  assessmentItems AssessmentItem[]
+  responses       Response[]
+
+  @@index([courseId])
+  @@index([type])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String  @id @default(cuid())
+  questionId String  @map("question_id")
+  text       String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  sortOrder  Int     @default(0) @map("sort_order")
+
+  question          Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answerKeys        AnswerKey[]
+  objectiveOutcomes ObjectiveOutcome[]
+
+  @@map("question_options")
+}
+
+model AnswerKey {
+  id              String @id @default(cuid())
+  questionId      String @map("question_id")
+  version         Int    @default(1)
+  correctOptionId String @map("correct_option_id")
+
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  correctOption QuestionOption @relation(fields: [correctOptionId], references: [id])
+
+  @@map("answer_keys")
+}
+
+model MarkingScheme {
+  id         String        @id @default(cuid())
+  questionId String        @map("question_id")
+  version    Int           @default(1)
+  method     MarkingMethod
+  maxMark    Float         @map("max_mark")
+  configJson String?       @map("config_json") @db.Text
+
+  question      Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  markingPoints MarkingPoint[]
+
+  @@map("marking_schemes")
+}
+
+model MarkingPoint {
+  id               String  @id @default(cuid())
+  schemeId         String  @map("scheme_id")
+  pointText        String  @map("point_text") @db.Text
+  marks            Float
+  alternativesJson String? @map("alternatives_json") @db.Text
+
+  scheme MarkingScheme @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+
+  @@map("marking_points")
+}
+
+model Assessment {
+  id                 String           @id @default(cuid())
+  courseId           String           @map("course_id")
+  title              String
+  type               AssessmentType   @default(exam)
+  durationMins       Int              @map("duration_mins")
+  startAt            DateTime?        @map("start_at")
+  endAt              DateTime?        @map("end_at")
+  status             AssessmentStatus @default(draft)
+  randomizeQuestions Boolean          @default(false) @map("randomize_questions")
+  randomizeOptions   Boolean          @default(false) @map("randomize_options")
+  maxAttempts        Int              @default(1) @map("max_attempts")
+  createdBy          String           @map("created_by")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  course           Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator          User              @relation(fields: [createdBy], references: [id])
+  items            AssessmentItem[]
+  attempts         Attempt[]
+  practiceAttempts PracticeAttempt[]
+  timeAdjustments  TimeAdjustment[]
+
+  @@index([courseId])
+  @@index([status])
+  @@map("assessments")
+}
+
+model AssessmentItem {
+  id            String         @id @default(cuid())
+  assessmentId  String         @map("assessment_id")
+  questionId    String         @map("question_id")
+  displayOrder  Int            @map("display_order")
+  maxMark       Float          @map("max_mark")
+  markingMethod MarkingMethod? @map("marking_method")
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  question   Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, questionId])
+  @@map("assessment_items")
+}
+
+model Attempt {
+  id                String        @id @default(cuid())
+  candidateId       String        @map("candidate_id")
+  assessmentId      String        @map("assessment_id")
+  startAt           DateTime?     @map("start_at")
+  expiresAt         DateTime?     @map("expires_at")
+  status            AttemptStatus @default(not_started)
+  isActive          Boolean       @default(false) @map("is_active")
+  submissionReceipt String?       @map("submission_receipt") @db.Text
+  receiptAt         DateTime?     @map("receipt_at")
+  recoveryCount     Int           @default(0) @map("recovery_count")
+  submittedAt       DateTime?     @map("submitted_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+
+  candidate            User                  @relation(fields: [candidateId], references: [id])
+  assessment           Assessment            @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  sessions             AttemptSession[]
+  presentationMappings PresentationMapping[]
+  responses            Response[]
+  objectiveOutcomes    ObjectiveOutcome[]
+  gradeDecisions       GradeDecision[]
+  results              Result[]
+  monitoringEvents     MonitoringEvent[]
+  snapshots            Snapshot[]
+  timeAdjustments      TimeAdjustment[]
+  issueReports         IssueReport[]
+  timeEvents           AttemptTimeEvent[]
+
+  @@index([candidateId])
+  @@index([assessmentId])
+  @@index([status])
+  @@map("attempts")
+}
+
+model AttemptSession {
+  id               String    @id @default(cuid())
+  attemptId        String    @map("attempt_id")
+  sessionTokenHash String    @map("session_token_hash")
+  lastSeenAt       DateTime  @default(now()) @map("last_seen_at")
+  userAgent        String?   @map("user_agent")
+  supersededAt     DateTime? @map("superseded_at")
+  startedAt        DateTime  @default(now()) @map("started_at")
+  endedAt          DateTime? @map("ended_at")
+
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId, supersededAt])
+  @@map("attempt_sessions")
+}
+
+model PresentationMapping {
+  id              String  @id @default(cuid())
+  attemptId       String  @map("attempt_id")
+  questionId      String  @map("question_id")
+  displayPosition Int     @map("display_position")
+  optionOrderJson String? @map("option_order_json") @db.Text
+
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@map("presentation_mappings")
+}
+
+model Response {
+  id               String     @id @default(cuid())
+  attemptId        String     @map("attempt_id")
+  questionId       String     @map("question_id")
+  currentText      String?    @map("current_text") @db.Text
+  selectedOptionId String?    @map("selected_option_id")
+  wordCount        Int        @default(0) @map("word_count")
+  syncStatus       SyncStatus @default(local) @map("sync_status")
+  lastSyncedAt     DateTime?  @map("last_synced_at")
+  timeSpentSecs    Int        @default(0) @map("time_spent_secs")
+  visitCount       Int        @default(0) @map("visit_count")
+  answerChanges    Int        @default(0) @map("answer_changes")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  attempt       Attempt           @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question      Question          @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  versions      ResponseVersion[]
+  gradeDecision GradeDecision?
+
+  @@unique([attemptId, questionId])
+  @@map("responses")
+}
+
+model ResponseVersion {
+  id               String   @id @default(cuid())
+  responseId       String   @map("response_id")
+  text             String?  @db.Text
+  selectedOptionId String?  @map("selected_option_id")
+  wordCount        Int      @default(0) @map("word_count")
+  versionNum       Int      @map("version_num")
+  saveType         SaveType @map("save_type")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  response Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@unique([responseId, versionNum])
+  @@map("response_versions")
+}
+
+model ObjectiveOutcome {
+  id               String  @id @default(cuid())
+  attemptId        String  @map("attempt_id")
+  questionId       String  @map("question_id")
+  selectedOptionId String? @map("selected_option_id")
+  isCorrect        Boolean @default(false) @map("is_correct")
+  score            Float   @default(0)
+  maxMark          Float   @map("max_mark")
+  timeSpentSecs    Int     @default(0) @map("time_spent_secs")
+  visitCount       Int     @default(0) @map("visit_count")
+  answerChanges    Int     @default(0) @map("answer_changes")
+  isUnanswered     Boolean @default(true) @map("is_unanswered")
+
+  attempt        Attempt         @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  selectedOption QuestionOption? @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([attemptId, questionId])
+  @@map("objective_outcomes")
+}
+
+model GradeDecision {
+  id                   String              @id @default(cuid())
+  attemptId            String              @map("attempt_id")
+  questionId           String              @map("question_id")
+  method               MarkingMethod?
+  provisionalScore     Float?              @map("provisional_score")
+  aiRecommendationJson String?             @map("ai_recommendation_json") @db.Text
+  lecturerDecision     GradeDecisionAction @default(pending) @map("lecturer_decision")
+  officialGrade        Float?              @map("official_grade")
+  gradedBy             String?             @map("graded_by")
+  gradedAt             DateTime?           @map("graded_at")
+  notes                String?             @db.Text
+
+  attempt  Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  response Response @relation(fields: [attemptId, questionId], references: [attemptId, questionId], onDelete: Cascade)
+  grader   User?    @relation(fields: [gradedBy], references: [id])
+
+  @@unique([attemptId, questionId])
+  @@map("grade_decisions")
+}
+
+model Result {
+  id                   String       @id @default(cuid())
+  attemptId            String       @map("attempt_id")
+  totalObjectiveScore  Float?       @map("total_objective_score")
+  totalSubjectiveScore Float?       @map("total_subjective_score")
+  totalScore           Float?       @map("total_score")
+  status               ResultStatus @default(pending)
+  releasedAt           DateTime?    @map("released_at")
+  releasedBy           String?      @map("released_by")
+
+  attempt  Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  releaser User?   @relation("ReleasedBy", fields: [releasedBy], references: [id])
+
+  @@unique([attemptId])
+  @@map("results")
+}
+
+model MonitoringEvent {
+  id         String    @id @default(cuid())
+  attemptId  String    @map("attempt_id")
+  eventType  String    @map("event_type")
+  occurredAt DateTime  @default(now()) @map("occurred_at")
+  metaJson   String?   @map("meta_json") @db.Text
+  reviewed   Boolean   @default(false)
+  reviewedBy String?   @map("reviewed_by")
+  reviewedAt DateTime? @map("reviewed_at")
+
+  attempt  Attempt   @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  reviewer User?     @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+  snapshot Snapshot?
+
+  @@index([attemptId])
+  @@map("monitoring_events")
+}
+
+model Snapshot {
+  id                String    @id @default(cuid())
+  monitoringEventId String?   @unique @map("monitoring_event_id")
+  attemptId         String    @map("attempt_id")
+  imageData         String    @map("image_data") @db.Text
+  takenAt           DateTime  @default(now()) @map("taken_at")
+  viewedBy          String?   @map("viewed_by")
+  deletedAt         DateTime? @map("deleted_at")
+  retentionUntil    DateTime? @map("retention_until")
+
+  monitoringEvent MonitoringEvent? @relation(fields: [monitoringEventId], references: [id])
+  attempt         Attempt          @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  viewer          User?            @relation("ViewedBy", fields: [viewedBy], references: [id])
+
+  @@index([attemptId])
+  @@index([retentionUntil])
+  @@map("snapshots")
+}
+
+model AuditEvent {
+  id           String   @id @default(cuid())
+  actorId      String?  @map("actor_id")
+  actionType   String   @map("action_type")
+  entityType   String?  @map("entity_type")
+  entityId     String?  @map("entity_id")
+  reason       String?  @db.Text
+  metadataJson String?  @map("metadata_json") @db.Text
+  occurredAt   DateTime @default(now()) @map("occurred_at")
+  prevHash     String?  @map("prev_hash")
+  hash         String?
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id])
+
+  @@index([actionType])
+  @@index([occurredAt])
+  @@map("audit_events")
+}
+
+model ReadinessCheck {
+  id          String   @id @default(cuid())
+  candidateId String   @map("candidate_id")
+  checkType   String   @map("check_type")
+  status      String
+  checkedAt   DateTime @default(now()) @map("checked_at")
+  detailsJson String?  @map("details_json") @db.Text
+
+  candidate User @relation(fields: [candidateId], references: [id])
+
+  @@map("readiness_checks")
+}
+
+model PracticeAttempt {
+  id           String    @id @default(cuid())
+  candidateId  String    @map("candidate_id")
+  assessmentId String    @map("assessment_id")
+  startedAt    DateTime  @default(now()) @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  status       String    @default("in_progress")
+  responseData String?   @map("response_data") @db.Text
+
+  candidate  User       @relation(fields: [candidateId], references: [id])
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@map("practice_attempts")
+}
+
+model TimeAdjustment {
+  id           String   @id @default(cuid())
+  attemptId    String?  @map("attempt_id")
+  candidateId  String   @map("candidate_id")
+  assessmentId String   @map("assessment_id")
+  extraMinutes Int      @map("extra_minutes")
+  approvedBy   String   @map("approved_by")
+  approvedAt   DateTime @default(now()) @map("approved_at")
+  auditRef     String?  @map("audit_ref")
+
+  attempt    Attempt?   @relation(fields: [attemptId], references: [id])
+  candidate  User       @relation("CandidateAdjustments", fields: [candidateId], references: [id])
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  approver   User       @relation("ApprovedBy", fields: [approvedBy], references: [id])
+
+  @@map("time_adjustments")
+}
+
+model AiRequest {
+  id               String        @id @default(cuid())
+  actorId          String        @map("actor_id")
+  requestType      AiRequestType @map("request_type")
+  questionId       String?       @map("question_id")
+  attemptId        String?       @map("attempt_id")
+  requestMetaJson  String?       @map("request_meta_json") @db.Text
+  responseJson     String?       @map("response_json") @db.Text
+  lecturerDecision String?       @map("lecturer_decision")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@map("ai_requests")
+}
+
+model IssueReport {
+  id                  String    @id @default(cuid())
+  attemptId           String    @map("attempt_id")
+  candidateId         String    @map("candidate_id")
+  category            String
+  description         String?   @db.VarChar(500)
+  telemetryJson       String?   @map("telemetry_json") @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  acknowledgedAt      DateTime? @map("acknowledged_at")
+  acknowledgedBy      String?   @map("acknowledged_by")
+  acknowledgementNote String?   @map("acknowledgement_note") @db.VarChar(500)
+  attempt             Attempt   @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  candidate           User      @relation(fields: [candidateId], references: [id])
+  acknowledger        User?     @relation("IssueAcknowledgedBy", fields: [acknowledgedBy], references: [id])
+
+  @@index([attemptId, createdAt])
+  @@index([candidateId])
+  @@map("issue_reports")
+}
+
+model AttemptTimeEvent {
+  id           String   @id @default(cuid())
+  attemptId    String   @map("attempt_id")
+  eventType    String   @map("event_type")
+  occurredAt   DateTime @default(now()) @map("occurred_at")
+  durationSecs Int?     @map("duration_secs")
+  reason       String?  @db.VarChar(500)
+  attempt      Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId, occurredAt])
+  @@map("attempt_time_events")
+}

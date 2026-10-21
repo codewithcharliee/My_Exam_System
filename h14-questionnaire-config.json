@@ -1,0 +1,14 @@
+{
+  "questionnaireName": "",
+  "items": [],
+  "responseAnchors": {
+    "minimumLabel": "",
+    "midpointLabel": "",
+    "maximumLabel": "",
+    "minimumValue": "",
+    "midpointValue": "",
+    "maximumValue": ""
+  },
+  "midpoint": "",
+  "reverseWordedItems": []
+}

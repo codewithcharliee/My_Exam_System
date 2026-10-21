@@ -1,0 +1,140 @@
+body {
+  min-height: 100vh;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+body * {
+  font-family: inherit !important;
+}
+
+body [style*="border"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+body [style*="#000000"],
+body [style*="#000"],
+body [style*="color: black"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+body > div {
+  color: hsl(var(--foreground)) !important;
+  font-family: inherit !important;
+}
+
+main {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1280px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 40px;
+  background: transparent !important;
+  color: hsl(var(--foreground)) !important;
+  font-family: inherit !important;
+}
+
+body h1 {
+  margin: 0 0 20px;
+  color: hsl(var(--primary)) !important;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+body h2 {
+  color: hsl(var(--primary)) !important;
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+
+.exam-visual-header h1 {
+  color: #fff !important;
+}
+
+body form {
+  display: grid;
+  gap: 10px;
+}
+
+main > section,
+main > article,
+body section,
+body article {
+  margin-block: 20px;
+  padding: 24px;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: var(--radius-lg);
+  background: hsl(var(--card));
+  box-shadow: var(--shadow-sm);
+}
+
+body table {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+}
+
+body th,
+body td {
+  padding: 12px 14px;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+  text-align: left;
+}
+
+body th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+}
+
+body tr:last-child td {
+  border-bottom: 0;
+}
+
+body button {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: var(--radius);
+  background: #1a2e5a !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+body input,
+body textarea,
+body select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 9px 12px;
+  border: 1px solid hsl(var(--input));
+  border-radius: var(--radius-sm);
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+body input[type="radio"],
+body input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: hsl(var(--primary));
+}
+
+@media (max-width: 640px) {
+  main {
+    padding: 20px;
+  }
+
+  main > section,
+  main > article {
+    padding: 16px;
+  }
+}
