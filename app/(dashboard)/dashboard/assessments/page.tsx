@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 import { SafeDate } from '@/components/safe-format';
 import { isFirstLevelCourse } from '@/lib/academic-rules';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 
 const MARKING_METHODS = ['human_grading', 'marking_points', 'exact_match', 'acceptable_answer', 'ai_recommendation'];
 
@@ -24,6 +25,7 @@ export default function AssessmentsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>('all');
   const [form, setForm] = useState({
     courseId: '', title: '', type: 'exam', durationMins: 120,
     startAt: '', endAt: '', randomizeQuestions: false, randomizeOptions: false,
@@ -114,7 +116,7 @@ export default function AssessmentsPage() {
           <h1 className="text-2xl font-display font-bold tracking-tight flex items-center gap-2">
             <ClipboardList className="h-6 w-6 text-primary" /> Assessments
           </h1>
-          <p className="text-muted-foreground">Configure and manage examinations</p>
+          <p className="text-muted-foreground">Configure and manage examinations by course semester</p>
         </div>
 
         {role === 'lecturer' && (
@@ -131,7 +133,7 @@ export default function AssessmentsPage() {
                       setSelectedQuestions([]);
                     }}>
                       <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>{(courses ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c?.code ?? ''}</SelectItem>)}</SelectContent>
+                      <SelectContent>{(courses ?? []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c?.code ?? ''} · {courseSemesterLabel(c?.semester)}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div><Label>Type</Label>
@@ -226,7 +228,17 @@ export default function AssessmentsPage() {
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : (
         <div className="space-y-4">
-          {(assessments ?? []).map((a: any) => (
+          <label className="flex w-full max-w-xs flex-col gap-1 text-sm font-medium">
+            Filter assessments by semester
+            <select aria-label="Filter assessments by semester" value={semesterFilter} onChange={(event) => setSemesterFilter(event.target.value as SemesterFilter)} className="h-10 rounded-md border bg-background px-3">
+              <option value="all">All semesters</option>
+              <option value="first">First semester</option>
+              <option value="second">Second semester</option>
+              <option value="full_year">Full year</option>
+              <option value="unassigned">Semester not assigned</option>
+            </select>
+          </label>
+          {(assessments ?? []).filter((assessment: any) => matchesSemester(assessment?.course?.semester, semesterFilter)).map((a: any) => (
             <Card key={a.id} className="hover:shadow-sm transition-shadow">
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
@@ -237,7 +249,7 @@ export default function AssessmentsPage() {
                       <Badge variant="outline" className="text-xs">{a?.type ?? ''}</Badge>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>{a?.course?.code ?? ''} - {a?.course?.title ?? ''}</span>
+                      <span>{a?.course?.code ?? ''} - {a?.course?.title ?? ''} · {courseSemesterLabel(a?.course?.semester)}</span>
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {a?.durationMins ?? 0} min</span>
                       <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {a?._count?.attempts ?? 0} attempts</span>
                       {a?.startAt && <span>Start: <SafeDate date={a.startAt} options={{ dateStyle: 'medium', timeStyle: 'short' }} /></span>}
@@ -252,7 +264,7 @@ export default function AssessmentsPage() {
               </CardContent>
             </Card>
           ))}
-          {(assessments ?? []).length === 0 && <p className="text-center text-muted-foreground py-12">No assessments found</p>}
+          {(assessments ?? []).filter((assessment: any) => matchesSemester(assessment?.course?.semester, semesterFilter)).length === 0 && <p className="text-center text-muted-foreground py-12">No assessments found for this semester</p>}
         </div>
       )}
     </div>

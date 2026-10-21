@@ -1,0 +1,48 @@
+export const PROFILE_DISPLAY_NAMES: Record<string, string> = {
+  'candidate.100.01@example.test': 'Amina Yusuf',
+  'candidate.100.02@example.test': 'Daniel Eze',
+  'candidate.100.03@example.test': 'Zainab Bello',
+  'candidate.100.04@example.test': 'Chinedu Okafor',
+  'candidate.100.05@example.test': 'Grace Adamu',
+  'candidate.200.01@example.test': 'Ibrahim Musa',
+  'candidate.200.02@example.test': 'Adaeze Nwankwo',
+  'candidate.200.03@example.test': 'Samuel Ojo',
+  'candidate.200.04@example.test': 'Fatima Sani',
+  'candidate.200.05@example.test': 'David Adebayo',
+  'candidate.300.01@example.test': 'Hauwa Abdullahi',
+  'candidate.300.02@example.test': 'Tobi Adeyemi',
+  'candidate.300.03@example.test': 'Chika Nwosu',
+  'candidate.300.04@example.test': 'Maryam Garba',
+  'candidate.300.05@example.test': 'Peter Udo',
+  'candidate.400.01@example.test': 'Ifeoma Okeke',
+  'candidate.400.02@example.test': 'Emmanuel Yakubu',
+  'candidate.400.03@example.test': 'Blessing Danjuma',
+  'candidate.400.04@example.test': 'Musa Audu',
+  'candidate.400.05@example.test': 'Esther Akinola',
+  'candidate.500.01@example.test': 'Nneka Ezeh',
+  'candidate.500.02@example.test': 'Abdulrahman Sule',
+  'candidate.500.03@example.test': 'Ruth Onwudiwe',
+  'candidate.500.04@example.test': 'Oluwatobi Afolayan',
+  'candidate.500.05@example.test': 'Aisha Mohammed',
+  'dean@example.test': 'Professor Kemi Adewale',
+  'hod@example.test': 'Dr. Ikenna Eze',
+  'assistant.lecturer.1@example.test': 'Dr. Nasir Sulaiman',
+  'assistant.lecturer.2@example.test': 'Dr. Adaobi Okonkwo',
+  'lecturer.1@example.test': 'Dr. Olumide Ajayi',
+  'lecturer.2@example.test': 'Dr. Amina Mohammed',
+  'lecturer.3@example.test': 'Dr. Chinedu Umeh',
+  'admin@bingham.edu': 'Musa Adamu',
+  'examofficer@bingham.edu': 'Grace Nwafor',
+  'lecturer@bingham.edu': 'Dr. Adamu Ibrahim',
+  'invigilator@bingham.edu': 'Tunde Adebayo',
+  'student1@bingham.edu': 'Amina Bello',
+  'student2@bingham.edu': 'Chukwudi Okafor',
+  'student3@bingham.edu': 'Fatima Yusuf',
+  'abacus-11a6e251@example.com': 'Ibrahim Danladi',
+};
+
+export function profileDisplayName(email: string): string {
+  const name = PROFILE_DISPLAY_NAMES[email];
+  if (!name) throw new Error(`No display name is configured for profile ${email}.`);
+  return name;
+}

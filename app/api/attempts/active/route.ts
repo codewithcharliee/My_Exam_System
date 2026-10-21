@@ -21,7 +21,7 @@ export async function GET() {
         assessment: {
           select: {
             title: true,
-            course: { select: { code: true, title: true } },
+            course: { select: { code: true, title: true, semester: true } },
           },
         },
       },
@@ -37,7 +37,7 @@ export async function GET() {
         assessment: {
           select: {
             title: true,
-            course: { select: { code: true, title: true } },
+            course: { select: { code: true, title: true, semester: true } },
           },
         },
         timeEvents: {
@@ -58,12 +58,14 @@ export async function GET() {
       assessmentTitle: attempt.assessment.title,
       courseCode: attempt.assessment.course.code,
       courseTitle: attempt.assessment.course.title,
+      semester: attempt.assessment.course.semester,
     })),
     interruptedAttempts: interruptedAttempts.map((attempt) => ({
       attemptId: attempt.id,
       assessmentTitle: attempt.assessment.title,
       courseCode: attempt.assessment.course.code,
       courseTitle: attempt.assessment.course.title,
+      semester: attempt.assessment.course.semester,
       reactivationRequested: attempt.timeEvents.length > 0,
     })),
   });

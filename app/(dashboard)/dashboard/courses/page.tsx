@@ -10,11 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { BookOpen, Plus, Loader2, Users, FileText, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>('all');
   const [form, setForm] = useState({ code: '', title: '', level: 'LLB', semester: 'first', isElective: false, creditUnits: '' });
   const [creating, setCreating] = useState(false);
   const [assigningCourse, setAssigningCourse] = useState<any>(null);
@@ -152,7 +154,7 @@ export default function CoursesPage() {
           <h1 className="text-2xl font-display font-bold tracking-tight flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" /> Course Management
           </h1>
-          <p className="text-muted-foreground">Manage LLB courses by level and semester, and lecturer assignments. Semester placement follows course-code parity; the NUC document does not specify semesters.</p>
+          <p className="text-muted-foreground">Manage LLB courses grouped by level and academic semester, and manage lecturer assignments.</p>
         </div>
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" /> Add Course</Button></DialogTrigger>
@@ -183,11 +185,30 @@ export default function CoursesPage() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
+          <label className="flex w-full max-w-xs flex-col gap-1 text-sm font-medium">
+            Filter courses by semester
+            <select
+              aria-label="Filter courses by semester"
+              className="h-10 rounded-md border border-input bg-background px-3 py-2"
+              value={semesterFilter}
+              onChange={(event) => setSemesterFilter(event.target.value as SemesterFilter)}
+            >
+              <option value="all">All semesters</option>
+              <option value="first">First semester</option>
+              <option value="second">Second semester</option>
+              <option value="full_year">Full year</option>
+              <option value="unassigned">Semester not assigned</option>
+            </select>
+          </label>
+          <div className="space-y-8">
           {[...new Set(courses.map((course: any) => course.level ?? 'Level not set'))]
             .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
             .map((level) => {
-              const levelCourses = courses.filter((course: any) => (course.level ?? 'Level not set') === level);
+              const levelCourses = courses.filter((course: any) =>
+                (course.level ?? 'Level not set') === level && matchesSemester(course.semester, semesterFilter),
+              );
+              if (levelCourses.length === 0) return null;
               const semesterGroups = [
                 { value: 'first', label: 'First semester' },
                 { value: 'second', label: 'Second semester' },
@@ -207,7 +228,10 @@ export default function CoursesPage() {
                           <Card key={c.id} className="hover:shadow-md transition-shadow">
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between">
-                                <span className="text-xs font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">{c?.code ?? ''}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-mono bg-primary/10 text-primary px-2 py-0.5 rounded">{c?.code ?? ''}</span>
+                                  <Badge variant="outline">{courseSemesterLabel(c?.semester)}</Badge>
+                                </div>
                                 <div className="flex items-center gap-2">
                                   {c?.isElective && <Badge variant="secondary">Elective</Badge>}
                                   {c?.catalogSource && <Badge variant="outline">Provisional</Badge>}
@@ -269,6 +293,10 @@ export default function CoursesPage() {
                 </section>
               );
             })}
+            </div>
+            {courses.filter((course: any) => matchesSemester(course.semester, semesterFilter)).length === 0 && (
+              <p className="py-8 text-center text-sm text-muted-foreground">No courses are assigned to this semester.</p>
+            )}
         </div>
       )}
       <Dialog open={Boolean(assigningCourse)} onOpenChange={(open) => { if (!open) setAssigningCourse(null); }}>

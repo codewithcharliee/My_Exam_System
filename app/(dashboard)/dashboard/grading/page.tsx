@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ClipboardList, CheckCircle, Loader2, Brain, Star, Send, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { LecturerGradeReview, type LecturerGradeDecision } from '@/components/exam/lecturer-grade-review';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 
 export default function GradingPage() {
   const [attempts, setAttempts] = useState<any[]>([]);
@@ -18,6 +19,7 @@ export default function GradingPage() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [levelFilter, setLevelFilter] = useState('');
   const [matricNumberFilter, setMatricNumberFilter] = useState('');
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>('all');
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
@@ -32,10 +34,11 @@ export default function GradingPage() {
     } catch (e) { toast.error('Failed to load script'); }
   };
 
-  const searchScripts = async (level = levelFilter, matricNumber = matricNumberFilter) => {
+  const searchScripts = async (level = levelFilter, matricNumber = matricNumberFilter, semester = semesterFilter) => {
     const params = new URLSearchParams();
     if (level) params.set('level', level);
     if (matricNumber.trim()) params.set('matricNumber', matricNumber.trim());
+    if (semester !== 'all') params.set('semester', semester);
     setSearching(true);
     try {
       const query = params.toString();
@@ -54,6 +57,10 @@ export default function GradingPage() {
     event.preventDefault();
     void searchScripts();
   };
+
+  const visibleAttempts = attempts.filter((attempt: any) =>
+    matchesSemester(attempt?.assessment?.course?.semester, semesterFilter),
+  );
 
   const saveGrade = async (
     attemptId: string,
@@ -297,7 +304,7 @@ export default function GradingPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          <form onSubmit={handleSearch} className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-[minmax(10rem,0.7fr)_minmax(14rem,1.3fr)_auto_auto] sm:items-end">
+          <form onSubmit={handleSearch} className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-[minmax(10rem,0.7fr)_minmax(14rem,1.3fr)_minmax(11rem,0.8fr)_auto_auto] sm:items-end">
             <div>
               <label htmlFor="grading-level-filter" className="mb-1 block text-sm font-medium">Student level</label>
               <select
@@ -321,6 +328,21 @@ export default function GradingPage() {
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm"
               />
             </div>
+            <div>
+              <label htmlFor="grading-semester-filter" className="mb-1 block text-sm font-medium">Course semester</label>
+              <select
+                id="grading-semester-filter"
+                value={semesterFilter}
+                onChange={(event) => setSemesterFilter(event.target.value as SemesterFilter)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="all">All semesters</option>
+                <option value="first">First semester</option>
+                <option value="second">Second semester</option>
+                <option value="full_year">Full year</option>
+                <option value="unassigned">Semester not assigned</option>
+              </select>
+            </div>
             <Button type="submit" disabled={searching}>
               {searching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
               Search scripts
@@ -332,19 +354,22 @@ export default function GradingPage() {
               onClick={() => {
                 setLevelFilter('');
                 setMatricNumberFilter('');
-                void searchScripts('', '');
+                setSemesterFilter('all');
+                void searchScripts('', '', 'all');
               }}
             >
               Clear
             </Button>
           </form>
-          {(attempts ?? []).map((a: any) => (
+          {visibleAttempts.map((a: any) => (
             <Card key={a.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => openScript(a)}>
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium">{a?.assessment?.title ?? ''}</h3>
-                    <p className="text-sm text-muted-foreground">{a?.candidate?.name ?? ''} — {a?.assessment?.course?.code ?? ''}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {a?.candidate?.name ?? ''} — {a?.assessment?.course?.code ?? ''} · {courseSemesterLabel(a?.assessment?.course?.semester)}
+                    </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {a?.candidate?.academicLevel ? `Level ${a.candidate.academicLevel}` : 'Level not set'}
                       {a?.candidate?.matricNumber ? ` · ${a.candidate.matricNumber}` : ' · Matric number not set'}
@@ -365,7 +390,7 @@ export default function GradingPage() {
               </CardContent>
             </Card>
           ))}
-          {(attempts ?? []).length === 0 && <p className="text-center text-muted-foreground py-12">No submitted scripts match these filters.</p>}
+          {visibleAttempts.length === 0 && <p className="text-center text-muted-foreground py-12">No submitted scripts match these filters.</p>}
         </div>
       )}
 

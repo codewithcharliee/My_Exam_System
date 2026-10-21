@@ -4,12 +4,17 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Award, FileText, Clock, CheckCircle, XCircle, Loader2, Download } from 'lucide-react';
 import { SafeDate } from '@/components/safe-format';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 
 export default function MyResultsPage() {
   const { data: session } = useSession();
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedResult, setSelectedResult] = useState<any>(null);
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>('all');
+  const filteredResults = results.filter((result: any) =>
+    matchesSemester(result?.attempt?.assessment?.course?.semester, semesterFilter),
+  );
 
   useEffect(() => {
     fetch('/api/results')
@@ -41,21 +46,33 @@ export default function MyResultsPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : results.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <Award className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <p>No results available yet</p>
-          <p className="text-sm mt-1">Results will appear here once they are released</p>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {results.map((r: any) => (
+        <div className="space-y-4">
+          <label className="flex w-full max-w-xs flex-col gap-1 text-sm font-medium">
+            Filter results by semester
+            <select aria-label="Filter results by semester" value={semesterFilter} onChange={(event) => setSemesterFilter(event.target.value as SemesterFilter)} className="h-10 rounded-md border bg-background px-3">
+              <option value="all">All semesters</option>
+              <option value="first">First semester</option>
+              <option value="second">Second semester</option>
+              <option value="full_year">Full year</option>
+              <option value="unassigned">Semester not assigned</option>
+            </select>
+          </label>
+          {filteredResults.length === 0 ? (
+            <div className="text-center py-20 text-muted-foreground">
+              <Award className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No results available for this semester</p>
+              <p className="text-sm mt-1">Results will appear here once they are released</p>
+            </div>
+          ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredResults.map((r: any) => (
             <div key={r?.id} className="bg-card rounded-lg shadow-md p-5 hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setSelectedResult(selectedResult?.id === r?.id ? null : r)}>
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold text-foreground">{r?.attempt?.assessment?.title ?? 'Assessment'}</h3>
-                  <p className="text-sm text-muted-foreground">{r?.attempt?.assessment?.course?.code ?? ''} - {r?.attempt?.assessment?.course?.title ?? ''}</p>
+                  <p className="text-sm text-muted-foreground">{r?.attempt?.assessment?.course?.code ?? ''} - {r?.attempt?.assessment?.course?.title ?? ''} · {courseSemesterLabel(r?.attempt?.assessment?.course?.semester)}</p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-lg font-bold ${getGradeColor(r?.grade)}`}>
                   {r?.grade ?? '-'}
@@ -102,7 +119,9 @@ export default function MyResultsPage() {
                 </div>
               )}
             </div>
-          ))}
+            ))}
+          </div>
+          )}
         </div>
       )}
     </div>

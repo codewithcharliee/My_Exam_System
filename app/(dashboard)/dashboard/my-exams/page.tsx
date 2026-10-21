@@ -7,6 +7,7 @@ import { AlertTriangle, GraduationCap, Clock, Loader2, Play, RotateCcw } from 'l
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { SafeDate } from '@/components/safe-format';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 
 export default function MyExamsPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function MyExamsPage() {
   const [starting, setStarting] = useState<string | null>(null);
   const [duplicateSessionBlocked, setDuplicateSessionBlocked] = useState(false);
   const [duplicateAttemptId, setDuplicateAttemptId] = useState<string | null>(null);
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>('all');
 
   useEffect(() => {
     fetch('/api/assessments').then(r => r.json()).then(d => setAssessments(d ?? [])).catch(() => {}).finally(() => setLoading(false));
@@ -108,7 +110,7 @@ export default function MyExamsPage() {
                 <div>
                   <h3 className="font-medium text-lg">{activeAttempt.assessmentTitle}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {activeAttempt.courseCode} - {activeAttempt.courseTitle}
+                    {activeAttempt.courseCode} - {activeAttempt.courseTitle} · {courseSemesterLabel(activeAttempt.semester)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Attempt ID: <span className="font-mono">{activeAttempt.attemptId}</span>
@@ -143,7 +145,7 @@ export default function MyExamsPage() {
                 <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h3 className="font-medium text-lg">{attempt.assessmentTitle}</h3>
-                    <p className="text-sm text-muted-foreground">{attempt.courseCode} - {attempt.courseTitle}</p>
+                    <p className="text-sm text-muted-foreground">{attempt.courseCode} - {attempt.courseTitle} · {courseSemesterLabel(attempt.semester)}</p>
                     <p className="mt-1 font-mono text-xs text-muted-foreground">Attempt ID: {attempt.attemptId}</p>
                     {requestState === 'error' && <p className="mt-2 text-sm text-destructive" role="alert">The request could not be sent. Please try again.</p>}
                   </div>
@@ -167,14 +169,24 @@ export default function MyExamsPage() {
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : (
         <div className="space-y-4">
-          {(assessments ?? []).map((a: any) => (
+          <label className="flex w-full max-w-xs flex-col gap-1 text-sm font-medium">
+            Filter examinations by semester
+            <select aria-label="Filter examinations by semester" value={semesterFilter} onChange={(event) => setSemesterFilter(event.target.value as SemesterFilter)} className="h-10 rounded-md border bg-background px-3">
+              <option value="all">All semesters</option>
+              <option value="first">First semester</option>
+              <option value="second">Second semester</option>
+              <option value="full_year">Full year</option>
+              <option value="unassigned">Semester not assigned</option>
+            </select>
+          </label>
+          {(assessments ?? []).filter((assessment: any) => matchesSemester(assessment?.course?.semester, semesterFilter)).map((a: any) => (
             <Card key={a.id} className="hover:shadow-md transition-shadow">
               <CardContent className="py-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium text-lg">{a?.title ?? ''}</h3>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                      <span>{a?.course?.code ?? ''} - {a?.course?.title ?? ''}</span>
+                      <span>{a?.course?.code ?? ''} - {a?.course?.title ?? ''} · {courseSemesterLabel(a?.course?.semester)}</span>
                       <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {a?.durationMins ?? 0} minutes</span>
                       <span>{(a?.items ?? []).length} questions</span>
                     </div>
@@ -198,7 +210,7 @@ export default function MyExamsPage() {
               </CardContent>
             </Card>
           ))}
-          {(assessments ?? []).length === 0 && <p className="text-center text-muted-foreground py-12">No examinations available</p>}
+          {(assessments ?? []).filter((assessment: any) => matchesSemester(assessment?.course?.semester, semesterFilter)).length === 0 && <p className="text-center text-muted-foreground py-12">No examinations available for this semester</p>}
         </div>
       )}
       {duplicateSessionBlocked && (

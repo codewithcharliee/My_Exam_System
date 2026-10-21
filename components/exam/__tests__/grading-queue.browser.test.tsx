@@ -6,10 +6,10 @@ import GradingPage from '@/app/(dashboard)/dashboard/grading/page';
 const script = {
   id: 'attempt-1',
   status: 'submitted',
-  candidate: { id: 'candidate-1', name: 'Synthetic Candidate 300-01', matricNumber: 'SYN-LAW-300-001', academicLevel: 300 },
+  candidate: { id: 'candidate-1', name: 'Hauwa Abdullahi', matricNumber: 'SYN-LAW-300-001', academicLevel: 300 },
   assessment: {
     title: 'Constitutional Law Examination',
-    course: { code: 'LAW301', title: 'Criminal Law' },
+    course: { code: 'LAW301', title: 'Criminal Law', semester: 'first' },
     items: [{
       questionId: 'question-1',
       maxMark: 10,
@@ -71,7 +71,7 @@ describe('grading queue', () => {
     await page.getByLabelText('Student level').selectOptions('300');
     await page.getByLabelText('Find by matric number').fill('300-001');
     await page.getByRole('button', { name: 'Search scripts' }).click();
-    await expect.element(page.getByText('Synthetic Candidate 300-01 — LAW301')).toBeVisible();
+    await expect.element(page.getByText('Hauwa Abdullahi — LAW301 · First semester')).toBeVisible();
     expect(fetchMock).toHaveBeenCalledWith('/api/grading?level=300&matricNumber=300-001');
 
     await page.getByRole('button', { name: 'Access response' }).click();

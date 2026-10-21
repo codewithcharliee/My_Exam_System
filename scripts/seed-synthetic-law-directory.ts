@@ -5,6 +5,7 @@ import path from 'path';
 import bcrypt from 'bcryptjs';
 import { createAuditEvent } from '../lib/audit';
 import { prisma } from '../lib/prisma';
+import { profileDisplayName } from './profile-display-names';
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error('DATABASE_URL is required.');
@@ -19,13 +20,13 @@ const temporaryOutputPath = `${outputPath}.${process.pid}.tmp`;
 const catalogSource = 'Synthetic draft catalog; unverified against the official Bingham University Faculty of Law curriculum.';
 
 const staff = [
-  { key: 'dean', name: 'Synthetic Dean', title: 'Dean' },
-  { key: 'hod', name: 'Synthetic Head of Department', title: 'Head of Department' },
-  { key: 'assistant-lecturer-1', name: 'Synthetic Assistant Lecturer 1', title: 'Assistant Lecturer' },
-  { key: 'assistant-lecturer-2', name: 'Synthetic Assistant Lecturer 2', title: 'Assistant Lecturer' },
-  { key: 'lecturer-1', name: 'Synthetic Lecturer 1', title: 'Lecturer' },
-  { key: 'lecturer-2', name: 'Synthetic Lecturer 2', title: 'Lecturer' },
-  { key: 'lecturer-3', name: 'Synthetic Lecturer 3', title: 'Lecturer' },
+  { key: 'dean', title: 'Dean' },
+  { key: 'hod', title: 'Head of Department' },
+  { key: 'assistant-lecturer-1', title: 'Assistant Lecturer' },
+  { key: 'assistant-lecturer-2', title: 'Assistant Lecturer' },
+  { key: 'lecturer-1', title: 'Lecturer' },
+  { key: 'lecturer-2', title: 'Lecturer' },
+  { key: 'lecturer-3', title: 'Lecturer' },
 ];
 
 const catalog = [
@@ -64,8 +65,8 @@ async function main() {
     ...[100, 200, 300, 400, 500].flatMap((level) =>
       Array.from({ length: 5 }, (_, index) => ({
         key: `candidate-${level}-${String(index + 1).padStart(2, '0')}`,
-        name: `Synthetic Candidate ${level}-${String(index + 1).padStart(2, '0')}`,
         email: `candidate.${level}.${String(index + 1).padStart(2, '0')}@example.test`,
+        name: profileDisplayName(`candidate.${level}.${String(index + 1).padStart(2, '0')}@example.test`),
         password: `Law!${crypto.randomBytes(18).toString('base64url')}`,
         role: 'candidate' as const,
         academicLevel: level,
@@ -75,8 +76,8 @@ async function main() {
     ),
     ...staff.map((person) => ({
       key: person.key,
-      name: person.name,
       email: `${person.key.replaceAll('-', '.')}@example.test`,
+      name: profileDisplayName(`${person.key.replaceAll('-', '.')}@example.test`),
       password: `Law!${crypto.randomBytes(18).toString('base64url')}`,
       role: 'lecturer' as const,
       academicLevel: null,

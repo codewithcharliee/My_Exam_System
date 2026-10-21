@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, Loader2, Search, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { isFirstLevelCourse } from '@/lib/academic-rules';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 
 const typeLabels: Record<string, string> = {
   multiple_choice: 'Multiple Choice',
@@ -30,6 +31,7 @@ export default function QuestionsPage() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [filterCourseId, setFilterCourseId] = useState(searchParams.get('courseId') ?? 'all');
+  const [filterSemester, setFilterSemester] = useState<SemesterFilter>('all');
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
 
@@ -143,6 +145,7 @@ export default function QuestionsPage() {
   }
 
   const filtered = (questions ?? []).filter((q: any) => {
+    if (!matchesSemester(q?.course?.semester, filterSemester)) return false;
     if (filterCourseId !== 'all' && q?.courseId !== filterCourseId) return false;
     if (filterType !== 'all' && q?.type !== filterType) return false;
     if (search && !(q?.text ?? '').toLowerCase().includes(search.toLowerCase()) && !(q?.topic ?? '').toLowerCase().includes(search.toLowerCase())) return false;
@@ -180,7 +183,7 @@ export default function QuestionsPage() {
                     <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
                     <SelectContent>
                       {(courses ?? []).map((c: any) => (
-                        <SelectItem key={c.id} value={c.id}>{c?.code ?? ''} - {c?.title ?? ''}</SelectItem>
+                        <SelectItem key={c.id} value={c.id}>{c?.code ?? ''} - {c?.title ?? ''} · {courseSemesterLabel(c?.semester)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -303,17 +306,27 @@ export default function QuestionsPage() {
         </Dialog>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search questions..." value={search} onChange={(e: any) => setSearch(e.target.value)} className="pl-10" />
         </div>
+        <Select value={filterSemester} onValueChange={(value: string) => setFilterSemester(value as SemesterFilter)}>
+          <SelectTrigger className="w-52"><SelectValue placeholder="All semesters" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All semesters</SelectItem>
+            <SelectItem value="first">First semester</SelectItem>
+            <SelectItem value="second">Second semester</SelectItem>
+            <SelectItem value="full_year">Full year</SelectItem>
+            <SelectItem value="unassigned">Semester not assigned</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={filterCourseId} onValueChange={setFilterCourseId}>
           <SelectTrigger className="w-56"><SelectValue placeholder="All Law courses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All assigned Law courses</SelectItem>
             {(courses ?? []).map((course: any) => (
-              <SelectItem key={course.id} value={course.id}>{course.code} · {course.title}</SelectItem>
+              <SelectItem key={course.id} value={course.id}>{course.code} · {course.title} · {courseSemesterLabel(course.semester)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -339,6 +352,7 @@ export default function QuestionsPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">{q?.course?.code ?? ''}</span>
+                      <Badge variant="outline" className="text-xs">{courseSemesterLabel(q?.course?.semester)}</Badge>
                       <Badge variant="outline" className="text-xs">{typeLabels[q?.type ?? ''] ?? q?.type ?? ''}</Badge>
                       <Badge variant={q?.status === 'draft' ? 'secondary' : 'default'} className="text-xs">{q?.status ?? 'approved'}</Badge>
                       {q?.topic && <span className="text-xs text-muted-foreground">{q.topic}</span>}

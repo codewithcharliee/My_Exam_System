@@ -4,13 +4,21 @@ import { prisma } from '@/lib/prisma';
 import { requireRouteAuthorization } from '@/lib/roles';
 import { createAuditEvent } from '@/lib/audit';
 import { isFirstLevelCourse } from '@/lib/academic-rules';
+import { isCourseSemester } from '@/lib/course-semester';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const { error, session } = await requireRouteAuthorization('GET /api/assessments');
   if (error) return error;
 
+  const semester = request.nextUrl.searchParams.get('semester');
+  if (semester && semester !== 'unassigned' && !isCourseSemester(semester)) {
+    return NextResponse.json({ error: 'Semester must be first, second, full_year, or unassigned.' }, { status: 400 });
+  }
+
   const role = (session!.user as any).role;
   const where: any = {};
+  if (semester === 'unassigned') where.course = { semester: null };
+  else if (semester) where.course = { semester };
 
   if (role === 'candidate') {
     where.status = 'published';
@@ -30,7 +38,7 @@ export async function GET() {
   const assessments = await prisma.assessment.findMany({
     where,
     include: {
-      course: { select: { code: true, title: true } },
+      course: { select: { code: true, title: true, semester: true, level: true } },
       items: { include: { question: { select: { id: true, type: true, text: true } } } },
       _count: { select: { attempts: true } },
     },

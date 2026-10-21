@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRouteAuthorization } from '@/lib/roles';
 import { createAuditEvent } from '@/lib/audit';
+import { isCourseSemester } from '@/lib/course-semester';
 
 const LAW_COURSE_CODE_PREFIXES = ['LAW', 'PUL', 'PPL', 'CIL', 'CLE', 'JIL'];
 const lawCourseCodeFilter = {
@@ -13,7 +14,14 @@ export async function GET(request: NextRequest) {
   const { error, session } = await requireRouteAuthorization('GET /api/courses');
   if (error) return error;
 
+  const semester = request.nextUrl.searchParams.get('semester');
+  if (semester && semester !== 'unassigned' && !isCourseSemester(semester)) {
+    return NextResponse.json({ error: 'Semester must be first, second, full_year, or unassigned.' }, { status: 400 });
+  }
+
   const where: any = { ...lawCourseCodeFilter };
+  if (semester === 'unassigned') where.semester = null;
+  else if (semester) where.semester = semester;
   if (session!.user.role === 'lecturer') {
     const assignments = await prisma.userCourse.findMany({
       where: { userId: session!.user.id, role: 'lecturer' },
@@ -28,7 +36,7 @@ export async function GET(request: NextRequest) {
       userCourses: { include: { user: { select: { id: true, name: true, role: true, staffTitle: true } } } },
       _count: { select: { questions: true, assessments: true } },
     },
-    orderBy: { code: 'asc' },
+    orderBy: [{ semester: 'asc' }, { code: 'asc' }],
   });
   return NextResponse.json(courses);
 }
@@ -48,7 +56,7 @@ export async function POST(request: NextRequest) {
     if (!LAW_COURSE_CODE_PREFIXES.some((prefix) => normalizedCode.startsWith(prefix))) {
       return NextResponse.json({ error: 'Only Faculty of Law course codes can be created.' }, { status: 400 });
     }
-    if (semester !== undefined && semester !== null && !['first', 'second', 'full_year'].includes(semester)) {
+    if (!isCourseSemester(semester)) {
       return NextResponse.json({ error: 'Semester must be first, second, or full_year.' }, { status: 400 });
     }
 
@@ -63,7 +71,7 @@ export async function POST(request: NextRequest) {
         code: normalizedCode,
         title: String(title).trim(),
         level: level || 'LLB',
-        semester: semester ?? null,
+        semester,
         isElective: isElective === true,
         creditUnits: units,
         catalogSource: catalogSource ? String(catalogSource).trim() : null,

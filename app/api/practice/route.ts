@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       include: {
         assessment: {
           include: {
-            course: { select: { code: true, title: true } },
+            course: { select: { code: true, title: true, semester: true } },
             items: {
               include: {
                 question: {
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           title: true,
-          course: { select: { code: true, title: true } },
+          course: { select: { code: true, title: true, semester: true } },
         },
       },
     },

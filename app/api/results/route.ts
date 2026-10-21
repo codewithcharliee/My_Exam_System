@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const role = (session!.user as any).role;
-  let where: any = {};
+  const where: any = {};
 
   if (role === 'candidate') {
     where.attempt = { candidateId: session!.user.id };
@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
         include: {
           candidate: { select: { name: true, email: true } },
           assessment: {
-            include: { items: true },
+            include: {
+              course: { select: { code: true, title: true, semester: true } },
+              items: true,
+            },
           },
         },
       },

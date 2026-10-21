@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireRouteAuthorization } from '@/lib/roles';
 import { createAuditEvent } from '@/lib/audit';
+import { isCourseSemester } from '@/lib/course-semester';
 
 function gradeFromScore(score: number): string {
   if (score >= 70) return 'A';
@@ -20,10 +21,16 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const reportType = url.searchParams.get('type') || 'summary';
     const courseIdFilter = url.searchParams.get('courseId') || undefined;
+    const semesterFilter = url.searchParams.get('semester') || undefined;
     const role = (session!.user as any).role;
 
     const assessmentWhere: any = {};
     if (courseIdFilter) assessmentWhere.courseId = courseIdFilter;
+    if (semesterFilter) {
+      if (semesterFilter === 'unassigned') assessmentWhere.course = { semester: null };
+      else if (isCourseSemester(semesterFilter)) assessmentWhere.course = { semester: semesterFilter };
+      else return NextResponse.json({ error: 'Semester must be first, second, full_year, or unassigned.' }, { status: 400 });
+    }
 
     if (role === 'lecturer') {
       const courses = await prisma.userCourse.findMany({
@@ -78,7 +85,7 @@ export async function GET(request: NextRequest) {
       const list = await prisma.assessment.findMany({
         where: assessmentWhere,
         include: {
-          course: { select: { code: true, title: true } },
+          course: { select: { code: true, title: true, semester: true } },
           attempts: {
             include: { results: true },
           },
@@ -104,6 +111,7 @@ export async function GET(request: NextRequest) {
           id: a.id,
           title: a.title,
           courseCode: a.course?.code,
+          semester: a.course?.semester,
           attemptCount: a.attempts?.length ?? 0,
           avgScore,
           passRate: passRateAssessment,
@@ -155,7 +163,7 @@ export async function GET(request: NextRequest) {
       actorId: session!.user.id,
       actionType: 'reports_viewed',
       entityType: 'report',
-      metadata: { reportType, courseIdFilter: courseIdFilter ?? null },
+      metadata: { reportType, courseIdFilter: courseIdFilter ?? null, semesterFilter: semesterFilter ?? null },
     });
 
     return NextResponse.json({

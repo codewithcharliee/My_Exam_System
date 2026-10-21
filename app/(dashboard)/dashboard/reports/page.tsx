@@ -6,6 +6,7 @@ import { BarChart3, Download, Filter, FileText, Users, Award, TrendingUp, Loader
 import { SafeDate } from '@/components/safe-format';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -19,6 +20,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [reportType, setReportType] = useState('summary');
   const [courseId, setCourseId] = useState('');
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>('all');
   const [courses, setCourses] = useState<any[]>([]);
   const [assessmentId, setAssessmentId] = useState('');
   const [assessments, setAssessments] = useState<any[]>([]);
@@ -41,15 +43,17 @@ export default function ReportsPage() {
   }
 
   useEffect(() => {
-    setLoading(true);
     const params = new URLSearchParams({ type: reportType });
     if (courseId) params.set('courseId', courseId);
+    if (semesterFilter !== 'all') params.set('semester', semesterFilter);
     fetch(`/api/reports?${params}`)
       .then(r => r.json())
       .then(d => setReport(d))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [reportType, courseId]);
+  }, [reportType, courseId, semesterFilter]);
+
+  const semesterCourses = courses.filter((course: any) => matchesSemester(course.semester, semesterFilter));
 
   const scoreDistribution = report?.scoreDistribution ?? [];
   const gradeBreakdown = report?.gradeBreakdown ?? [];
@@ -68,17 +72,25 @@ export default function ReportsPage() {
 
       {/* Filters */}
       <div className="flex gap-4 flex-wrap">
-        <select value={reportType} onChange={e => setReportType(e.target.value)}
+        <select value={reportType} onChange={e => { setLoading(true); setReportType(e.target.value); }}
           className="px-3 py-2 rounded-md border bg-card text-foreground">
           <option value="summary">Summary</option>
           <option value="detailed">Detailed</option>
           {['admin', 'exam_officer'].includes((session?.user as any)?.role ?? '') && <option value="institutional">Institutional operations</option>}
         </select>
-        <select value={courseId} onChange={e => setCourseId(e.target.value)}
+        <select aria-label="Filter reports by semester" value={semesterFilter} onChange={e => { setLoading(true); setSemesterFilter(e.target.value as SemesterFilter); setCourseId(''); setAssessmentId(''); }}
+          className="px-3 py-2 rounded-md border bg-card text-foreground">
+          <option value="all">All semesters</option>
+          <option value="first">First semester</option>
+          <option value="second">Second semester</option>
+          <option value="full_year">Full year</option>
+          <option value="unassigned">Semester not assigned</option>
+        </select>
+        <select value={courseId} onChange={e => { setLoading(true); setCourseId(e.target.value); }}
           className="px-3 py-2 rounded-md border bg-card text-foreground">
           <option value="">All Courses</option>
-          {(courses ?? []).map((c: any) => (
-            <option key={c?.id} value={c?.id}>{c?.code} - {c?.title}</option>
+          {semesterCourses.map((c: any) => (
+            <option key={c?.id} value={c?.id}>{c?.code} - {c?.title} · {courseSemesterLabel(c?.semester)}</option>
           ))}
         </select>
       </div>
@@ -87,7 +99,7 @@ export default function ReportsPage() {
         <div className="bg-card rounded-lg p-5 shadow-md space-y-3">
           <h2 className="font-semibold">Export assessment records</h2>
           <div className="flex gap-3 flex-wrap items-end">
-            <label className="text-sm">Assessment<select value={assessmentId} onChange={e => setAssessmentId(e.target.value)} className="block mt-1 px-3 py-2 rounded-md border bg-card"><option value="">Select assessment</option>{assessments.map((a: any) => <option key={a.id} value={a.id}>{a.title}</option>)}</select></label>
+            <label className="text-sm">Assessment<select value={assessmentId} onChange={e => setAssessmentId(e.target.value)} className="block mt-1 px-3 py-2 rounded-md border bg-card"><option value="">Select assessment</option>{assessments.filter((a: any) => matchesSemester(a?.course?.semester, semesterFilter)).map((a: any) => <option key={a.id} value={a.id}>{a.title} · {a?.course?.code} · {courseSemesterLabel(a?.course?.semester)}</option>)}</select></label>
             <label className="text-sm">Format<select value={exportFormat} onChange={e => setExportFormat(e.target.value)} className="block mt-1 px-3 py-2 rounded-md border bg-card"><option value="zip">Encrypted ZIP scripts</option><option value="xlsx">Aggregated spreadsheet</option></select></label>
             <div className="text-sm"><Label htmlFor="export-password">Password</Label><PasswordInput id="export-password" minLength={8} value={exportPassword} onChange={e => setExportPassword(e.target.value)} className="mt-1 bg-card" placeholder="At least 8 characters" /></div>
             <button type="button" onClick={exportRecords} className="px-4 py-2 rounded-md bg-primary text-primary-foreground"><Download className="h-4 w-4 inline mr-2" />Export</button>
@@ -187,6 +199,7 @@ export default function ReportsPage() {
                     <tr>
                       <th className="px-4 py-3 text-left font-medium">Assessment</th>
                       <th className="px-4 py-3 text-left font-medium">Course</th>
+                      <th className="px-4 py-3 text-left font-medium">Semester</th>
                       <th className="px-4 py-3 text-left font-medium">Attempts</th>
                       <th className="px-4 py-3 text-left font-medium">Avg Score</th>
                       <th className="px-4 py-3 text-left font-medium">Pass Rate</th>
@@ -197,6 +210,7 @@ export default function ReportsPage() {
                       <tr key={a?.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 font-medium">{a?.title ?? 'N/A'}</td>
                         <td className="px-4 py-3 text-muted-foreground">{a?.courseCode ?? 'N/A'}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{courseSemesterLabel(a?.semester)}</td>
                         <td className="px-4 py-3">{a?.attemptCount ?? 0}</td>
                         <td className="px-4 py-3">{(a?.avgScore ?? 0)?.toFixed?.(1) ?? '0'}%</td>
                         <td className="px-4 py-3">

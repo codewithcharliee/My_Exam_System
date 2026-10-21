@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { profileDisplayName } from './profile-display-names';
 
 const prisma = new PrismaClient();
 
@@ -23,50 +24,50 @@ async function main() {
   // Create users
   const admin = await prisma.user.upsert({
     where: { email: 'admin@bingham.edu' },
-    update: {},
-    create: { name: 'Admin User', email: 'admin@bingham.edu', passwordHash: adminHash, role: 'admin' },
+    update: { name: profileDisplayName('admin@bingham.edu') },
+    create: { name: profileDisplayName('admin@bingham.edu'), email: 'admin@bingham.edu', passwordHash: adminHash, role: 'admin' },
   });
 
   const testAdmin = await prisma.user.upsert({
     where: { email: 'abacus-11a6e251@example.com' },
-    update: {},
-    create: { name: 'Test Admin', email: 'abacus-11a6e251@example.com', passwordHash: testHash, role: 'admin' },
+    update: { name: profileDisplayName('abacus-11a6e251@example.com') },
+    create: { name: profileDisplayName('abacus-11a6e251@example.com'), email: 'abacus-11a6e251@example.com', passwordHash: testHash, role: 'admin' },
   });
 
   const examOfficer = await prisma.user.upsert({
     where: { email: 'examofficer@bingham.edu' },
-    update: {},
-    create: { name: 'Exam Officer', email: 'examofficer@bingham.edu', passwordHash: officerHash, role: 'exam_officer' },
+    update: { name: profileDisplayName('examofficer@bingham.edu') },
+    create: { name: profileDisplayName('examofficer@bingham.edu'), email: 'examofficer@bingham.edu', passwordHash: officerHash, role: 'exam_officer' },
   });
 
   const lecturer = await prisma.user.upsert({
     where: { email: 'lecturer@bingham.edu' },
-    update: {},
-    create: { name: 'Dr. Adamu Ibrahim', email: 'lecturer@bingham.edu', passwordHash: lecturerHash, role: 'lecturer' },
+    update: { name: profileDisplayName('lecturer@bingham.edu') },
+    create: { name: profileDisplayName('lecturer@bingham.edu'), email: 'lecturer@bingham.edu', passwordHash: lecturerHash, role: 'lecturer' },
   });
 
   const invigilator = await prisma.user.upsert({
     where: { email: 'invigilator@bingham.edu' },
-    update: {},
-    create: { name: 'Invigilator User', email: 'invigilator@bingham.edu', passwordHash: invigilatorHash, role: 'invigilator' },
+    update: { name: profileDisplayName('invigilator@bingham.edu') },
+    create: { name: profileDisplayName('invigilator@bingham.edu'), email: 'invigilator@bingham.edu', passwordHash: invigilatorHash, role: 'invigilator' },
   });
 
   const student1 = await prisma.user.upsert({
     where: { email: 'student1@bingham.edu' },
-    update: {},
-    create: { name: 'Amina Bello', email: 'student1@bingham.edu', passwordHash: studentHash, role: 'candidate' },
+    update: { name: profileDisplayName('student1@bingham.edu') },
+    create: { name: profileDisplayName('student1@bingham.edu'), email: 'student1@bingham.edu', passwordHash: studentHash, role: 'candidate' },
   });
 
   const student2 = await prisma.user.upsert({
     where: { email: 'student2@bingham.edu' },
-    update: {},
-    create: { name: 'Chukwudi Okafor', email: 'student2@bingham.edu', passwordHash: studentHash, role: 'candidate' },
+    update: { name: profileDisplayName('student2@bingham.edu') },
+    create: { name: profileDisplayName('student2@bingham.edu'), email: 'student2@bingham.edu', passwordHash: studentHash, role: 'candidate' },
   });
 
   const student3 = await prisma.user.upsert({
     where: { email: 'student3@bingham.edu' },
-    update: {},
-    create: { name: 'Fatima Yusuf', email: 'student3@bingham.edu', passwordHash: studentHash, role: 'candidate' },
+    update: { name: profileDisplayName('student3@bingham.edu') },
+    create: { name: profileDisplayName('student3@bingham.edu'), email: 'student3@bingham.edu', passwordHash: studentHash, role: 'candidate' },
   });
 
   // Create courses

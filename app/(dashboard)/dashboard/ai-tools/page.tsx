@@ -6,6 +6,7 @@ import { Brain, Sparkles, Loader2, Copy, Check, BookOpen } from 'lucide-react';
 import { COURSE_MATERIAL_ACCEPT, extractCourseMaterial } from '@/lib/ai/course-material';
 import { AI_GENERATION_MAX_QUESTIONS, AI_MATERIAL_MAX_CHARACTERS } from '@/lib/ai/limits';
 import { isFirstLevelCourse } from '@/lib/academic-rules';
+import { courseSemesterLabel } from '@/lib/course-semester';
 
 export default function AIToolsPage() {
   const [tab, setTab] = useState<'generate' | 'assess'>('generate');
@@ -244,7 +245,7 @@ export default function AIToolsPage() {
                 if (!isFirstLevelCourse(nextCourse?.level) && qType === 'multiple_choice') setQType('short_answer');
               }} className="w-full px-3 py-2 border rounded-md bg-background text-foreground">
                 {(courses ?? []).map((c: any) => (
-                  <option key={c?.id} value={c?.id}>{c?.code} - {c?.title}</option>
+                  <option key={c?.id} value={c?.id}>{c?.code} - {c?.title} · {courseSemesterLabel(c?.semester)}</option>
                 ))}
               </select>
             </div>

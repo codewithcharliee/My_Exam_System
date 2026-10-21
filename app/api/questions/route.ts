@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   const questions = await prisma.question.findMany({
     where,
     include: {
-      course: { select: { code: true, title: true } },
+      course: { select: { code: true, title: true, semester: true, level: true } },
       options: { orderBy: { sortOrder: 'asc' } },
       markingSchemes: { include: { markingPoints: true }, orderBy: { version: 'desc' } },
       answerKeys: { orderBy: { version: 'desc' } },

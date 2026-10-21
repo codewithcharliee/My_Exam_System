@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Play, Save, CheckCircle } from 'lucide-react';
+import { courseSemesterLabel, matchesSemester, type SemesterFilter } from '@/lib/course-semester';
 
 export default function PracticePage() {
   const [assessments, setAssessments] = useState<any[]>([]);
@@ -9,6 +10,7 @@ export default function PracticePage() {
   const [activePractice, setActivePractice] = useState<any>(null);
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
+  const [semesterFilter, setSemesterFilter] = useState<SemesterFilter>('all');
 
   useEffect(() => {
     fetch('/api/assessments').then((r) => r.json()).then((a) => setAssessments(a ?? [])).finally(() => setLoading(false));
@@ -48,7 +50,9 @@ export default function PracticePage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Practice Mode</h1>
-          <p className="text-muted-foreground">{activePractice.assessment?.title}</p>
+          <p className="text-muted-foreground">
+            {activePractice.assessment?.title} · {courseSemesterLabel(activePractice.assessment?.course?.semester)}
+          </p>
         </div>
 
         <div className="space-y-4">
@@ -105,17 +109,30 @@ export default function PracticePage() {
       </div>
 
       <div className="space-y-3">
-        {(assessments ?? []).map((a: any) => (
+        <label className="flex w-full max-w-xs flex-col gap-1 text-sm font-medium">
+          Filter practice assessments by semester
+          <select aria-label="Filter practice assessments by semester" value={semesterFilter} onChange={(event) => setSemesterFilter(event.target.value as SemesterFilter)} className="h-10 rounded-md border bg-background px-3">
+            <option value="all">All semesters</option>
+            <option value="first">First semester</option>
+            <option value="second">Second semester</option>
+            <option value="full_year">Full year</option>
+            <option value="unassigned">Semester not assigned</option>
+          </select>
+        </label>
+        {(assessments ?? []).filter((assessment: any) => matchesSemester(assessment?.course?.semester, semesterFilter)).map((a: any) => (
           <div key={a.id} className="border rounded-lg p-4 flex items-center justify-between">
             <div>
               <p className="font-medium">{a.title}</p>
-              <p className="text-sm text-muted-foreground">{a?.course?.code} - {a?.course?.title}</p>
+              <p className="text-sm text-muted-foreground">{a?.course?.code} - {a?.course?.title} · {courseSemesterLabel(a?.course?.semester)}</p>
             </div>
             <button onClick={() => startPractice(a.id)} className="px-3 py-2 rounded-md border inline-flex items-center gap-2">
               <Play className="h-4 w-4" /> Start Practice
             </button>
           </div>
         ))}
+        {(assessments ?? []).filter((assessment: any) => matchesSemester(assessment?.course?.semester, semesterFilter)).length === 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">No practice assessments are available for this semester.</p>
+        )}
       </div>
     </div>
   );

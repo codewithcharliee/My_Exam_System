@@ -15,6 +15,7 @@ import { ConnectionStatus } from '@/components/exam/connection-status';
 import { SubmissionReceipt, type SubmissionReceiptDetails } from '@/components/exam/submission-receipt';
 import { encryptAndStore, decryptAndLoad, clearStored } from '@/components/exam/crypto-utils';
 import { maskCandidateIdentifier } from '@/lib/exam-receipt';
+import { courseSemesterLabel } from '@/lib/course-semester';
 
 interface ExamClientProps {
   attemptId: string;
@@ -1351,7 +1352,9 @@ export default function ExamClient({ attemptId }: ExamClientProps) {
           <Monitor className="h-5 w-5 shrink-0" />
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold">{attempt?.assessment?.title ?? 'Exam'}</h1>
-            <p className="truncate text-xs opacity-80">{attempt?.assessment?.course?.code ?? ''}</p>
+            <p className="truncate text-xs opacity-80">
+              {attempt?.assessment?.course?.code ?? ''} · {courseSemesterLabel(attempt?.assessment?.course?.semester)}
+            </p>
           </div>
         </div>
 
