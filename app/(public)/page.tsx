@@ -1,13 +1,11 @@
-import Link from 'next/link';
 import { BookOpenCheck, GraduationCap, LogIn, Shield, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900">
       <header className="border-b border-slate-200">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-3">
+          <a href="./" className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1a2e5a]">
               <Shield className="h-6 w-6 text-[#d4a017]" />
             </span>
@@ -15,8 +13,8 @@ export default function HomePage() {
               <span className="block font-bold text-[#1a2e5a]">Bingham University</span>
               <span className="block text-xs text-slate-600">Faculty of Law</span>
             </span>
-          </Link>
-          <Link href="/login" className="text-sm font-semibold text-[#1a2e5a] hover:underline">Sign in</Link>
+          </a>
+          <a href="/login" className="text-sm font-semibold text-[#1a2e5a] hover:underline">Sign in</a>
         </div>
       </header>
 
@@ -32,26 +30,18 @@ export default function HomePage() {
               A secure platform for students and faculty to prepare for, deliver and manage law examinations.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button asChild size="lg" className="bg-white text-[#1a2e5a] hover:bg-slate-100">
-                <Link href="/login">
-                  <LogIn className="mr-2 h-5 w-5" /> Sign in
-                </Link>
-              </Button>
-              <Button asChild size="lg" className="bg-[#d4a017] text-[#1a2e5a] hover:bg-[#e2b43b]">
-                <Link href="/login/student">
-                  <GraduationCap className="mr-2 h-5 w-5" /> Student Portal
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/40 bg-white/5 text-white hover:bg-white/15 hover:text-white">
-                <Link href="/login/admin">
-                  <Shield className="mr-2 h-5 w-5" /> Admin Portal
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-[#e5bd55]/60 bg-transparent text-[#e5bd55] hover:bg-[#e5bd55]/10 hover:text-[#e5bd55]">
-                <Link href="/signup">
-                  <Users className="mr-2 h-5 w-5" /> Register
-                </Link>
-              </Button>
+              <a href="/login" className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-white px-6 text-base font-medium text-[#1a2e5a] transition-all duration-fast hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]">
+                <LogIn className="h-4 w-4" aria-hidden="true" /> Sign in
+              </a>
+              <a href="/login/student" className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#d4a017] px-6 text-base font-medium text-[#1a2e5a] transition-all duration-fast hover:bg-[#e2b43b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]">
+                <GraduationCap className="h-4 w-4" aria-hidden="true" /> Student Portal
+              </a>
+              <a href="/login/admin" className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-white/40 bg-white/5 px-6 text-base font-medium text-white transition-all duration-fast hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]">
+                <Shield className="h-4 w-4" aria-hidden="true" /> Admin Portal
+              </a>
+              <a href="/signup" className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#e5bd55]/60 bg-transparent px-6 text-base font-medium text-[#e5bd55] transition-all duration-fast hover:bg-[#e5bd55]/10 hover:text-[#e5bd55] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]">
+                <Users className="h-4 w-4" aria-hidden="true" /> Register
+              </a>
             </div>
             <p className="mt-5 text-sm text-white/60">The Admin Portal is for authorized administrators and staff.</p>
           </div>

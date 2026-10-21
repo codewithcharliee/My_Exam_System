@@ -1,7 +1,3 @@
-'use client';
-
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { COPYRIGHT_NOTICE, SYSTEM_NAME, SYSTEM_VERSION, UNIVERSITY_NAME } from '@/lib/system-info';
 
 const footerLinks = [
@@ -10,10 +6,7 @@ const footerLinks = [
   { href: '/support', label: 'Support' },
 ];
 
-export function SiteFooter() {
-  const pathname = usePathname();
-  const compact = pathname?.startsWith('/exam/exam');
-
+export function SiteFooter({ compact = false }: { compact?: boolean }) {
   return (
     <footer className={`border-t border-border bg-muted/40 ${compact ? 'px-3 py-1' : 'px-4 py-4 sm:px-6 lg:px-8'}`} aria-label="Site information">
       {compact ? (
@@ -31,13 +24,13 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-x-4 gap-y-1">
               {footerLinks.map((link) => (
-                <Link
+                <a
                   key={link.href}
                   href={link.href}
                   className="rounded-sm text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   {link.label}
-                </Link>
+                </a>
               ))}
             </nav>
             <p className="text-muted-foreground">Version {SYSTEM_VERSION}</p>
