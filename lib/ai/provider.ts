@@ -25,26 +25,29 @@ export function isAiProviderConfigured(): boolean {
 export function getAiProviderConfig() {
   return {
     apiKeyConfigured: isAiProviderConfigured(),
-    baseUrl: process.env.ABACUSAI_BASE_URL ?? 'https://apps.abacus.ai/v1/chat/completions',
-    model: process.env.ABACUSAI_MODEL ?? 'gpt-5.4-mini',
+    baseUrl: process.env.ABACUSAI_BASE_URL ?? 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+    model: process.env.ABACUSAI_MODEL ?? 'models/gemini-3.8-flash',
   };
 }
 
 export async function callAiProvider(options: AiRequestOptions): Promise<Response> {
   const apiKey = (process.env.ABACUSAI_API_KEY ?? '').trim();
+  const primaryModel = options.model ?? getAiProviderConfig().model;
+  const fallbackModel = (process.env.ABACUSAI_FALLBACK_MODEL ?? 'models/gemini-3.5-flash').trim();
+  let requestedModel = primaryModel;
 
   if (!apiKey) {
     throw new AiProviderUnavailableError('ABACUSAI_API_KEY is not configured');
   }
 
-  const response = await fetch(getAiProviderConfig().baseUrl, {
+  let response = await fetch(getAiProviderConfig().baseUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: options.model ?? getAiProviderConfig().model,
+      model: primaryModel,
       messages: options.messages,
       stream: options.stream ?? true,
       ...(options.maxTokens !== undefined ? { max_tokens: options.maxTokens } : {}),
@@ -52,8 +55,43 @@ export async function callAiProvider(options: AiRequestOptions): Promise<Respons
     }),
   });
 
+  if ([404, 429, 503].includes(response.status) && fallbackModel && fallbackModel !== primaryModel) {
+    console.warn('AI provider primary model unavailable; retrying with fallback model.', {
+      status: response.status,
+      primaryModel,
+      fallbackModel,
+    });
+    await response.body?.cancel();
+    requestedModel = fallbackModel;
+    response = await fetch(getAiProviderConfig().baseUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: fallbackModel,
+        messages: options.messages,
+        stream: options.stream ?? true,
+        ...(options.maxTokens !== undefined ? { max_tokens: options.maxTokens } : {}),
+        ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
+      }),
+    });
+  }
+
   if (!response.ok) {
-    throw new AiProviderUnavailableError('AI service unavailable');
+    console.error('AI provider request failed.', {
+      status: response.status,
+      model: requestedModel,
+    });
+    const message = response.status === 401 || response.status === 403
+      ? 'AI provider rejected its configured credentials.'
+      : response.status === 404
+        ? 'The configured AI model or endpoint was not found.'
+        : response.status === 429 || response.status >= 500
+          ? 'AI provider is temporarily unavailable. Please try again shortly.'
+          : `AI provider request failed (HTTP ${response.status}).`;
+    throw new AiProviderUnavailableError(message);
   }
 
   return response;
