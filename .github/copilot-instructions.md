@@ -94,6 +94,12 @@ The app is built around an exam lifecycle rather than a generic CRUD app:
 - `STYLE_GUIDE.md`: follow the documented layout, typography, color tokens, spacing, and component usage patterns.
 - `plan.md`: confirms that exam features are intentionally distributed across route handlers, Prisma models, and exam client logic; keep that architectural pattern when extending the system.
 
+## Lighthouse quality target
+
+- Treat 100 in Lighthouse Performance, Accessibility, Best Practices, and SEO as the target for public routes. After changes that can affect user-facing pages, run a clean audit with extensions disabled and compare it with the previous baseline.
+- Fix actionable regressions before deployment; optimize assets based on measured impact, and preserve accessibility and application behavior while improving scores.
+- Lighthouse scores vary with network, browser, hosting, and test conditions. Never claim or guarantee a fixed score when it cannot be reproduced; report the exact audit conditions, results, and any external or non-actionable limits.
+
 ## When in doubt
 
 Prefer reading the relevant route, Prisma model, and matching UI/test file together before changing behavior. This project’s features are intentionally spread across multiple layers, and the correct fix usually requires understanding the interaction between the API, the database schema, and the exam client.
