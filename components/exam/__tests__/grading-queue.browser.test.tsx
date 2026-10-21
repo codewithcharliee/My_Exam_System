@@ -10,19 +10,37 @@ const script = {
   assessment: {
     title: 'Constitutional Law Examination',
     course: { code: 'LAW301', title: 'Criminal Law', semester: 'first' },
-    items: [{
-      questionId: 'question-1',
-      maxMark: 10,
-      question: {
-        id: 'question-1',
-        type: 'essay',
-        text: 'Explain the doctrine of precedent.',
-        markingSchemes: [{ method: 'human_grading', maxMark: 10 }],
+    items: [
+      {
+        questionId: 'question-1',
+        maxMark: 10,
+        question: {
+          id: 'question-1',
+          type: 'essay',
+          text: 'Explain the doctrine of precedent.',
+          markingSchemes: [{ method: 'human_grading', maxMark: 10 }],
+        },
       },
-    }],
+      {
+        questionId: 'question-2',
+        maxMark: 10,
+        question: {
+          id: 'question-2',
+          type: 'essay',
+          text: 'Explain the separation of powers.',
+          markingSchemes: [{ method: 'human_grading', maxMark: 10 }],
+        },
+      },
+    ],
   },
-  presentationMappings: [{ id: 'mapping-1', questionId: 'question-1', displayPosition: 1 }],
-  responses: [{ questionId: 'question-1', currentText: 'Saved student answer from the examination submission.', wordCount: 8 }],
+  presentationMappings: [
+    { id: 'mapping-1', questionId: 'question-1', displayPosition: 1 },
+    { id: 'mapping-2', questionId: 'question-2', displayPosition: 2 },
+  ],
+  responses: [
+    { questionId: 'question-1', currentText: 'Saved student answer from the examination submission.', wordCount: 8 },
+    { questionId: 'question-2', currentText: 'Second saved examination response.', wordCount: 4 },
+  ],
   objectiveOutcomes: [],
   gradeDecisions: [],
 };
@@ -42,6 +60,7 @@ describe('grading queue', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('filters by level and matric number, opens a saved response, and requests its AI recommendation', async () => {
+    let completeAiResponse: (() => void) | undefined;
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.startsWith('/api/grading')) {
@@ -53,8 +72,10 @@ describe('grading queue', () => {
       if (url === '/api/ai/assess') {
         const stream = new ReadableStream({
           start(controller) {
-            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ status: 'completed', result: recommendation })}\n\n`));
-            controller.close();
+            completeAiResponse = () => {
+              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ status: 'completed', result: recommendation })}\n\n`));
+              controller.close();
+            };
           },
         });
         return new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } });
@@ -76,7 +97,12 @@ describe('grading queue', () => {
 
     await page.getByRole('button', { name: 'Access response' }).click();
     await expect.element(page.getByText('Saved student answer from the examination submission.')).toBeVisible();
-    await page.getByRole('button', { name: 'Get AI Recommendation' }).click();
+    const recommendationButtons = page.getByRole('button', { name: 'Get AI Recommendation' });
+    await expect.element(recommendationButtons.nth(1)).toBeVisible();
+    await recommendationButtons.nth(0).click();
+    await expect.element(page.getByTestId('ai-recommendation-spinner')).toBeVisible();
+    await expect.element(page.getByTestId('ai-recommendation-idle-icon')).toBeVisible();
+    completeAiResponse?.();
     await expect.element(page.getByText('The saved response addresses the core principle.')).toBeVisible();
 
     const aiRequest = fetchMock.mock.calls.find(([url]) => String(url) === '/api/ai/assess');

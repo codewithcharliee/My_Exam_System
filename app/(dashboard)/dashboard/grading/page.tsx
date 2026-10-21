@@ -15,7 +15,7 @@ export default function GradingPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAttempt, setSelectedAttempt] = useState<any>(null);
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [aiLoadingKey, setAiLoadingKey] = useState<string | null>(null);
   const [aiResult, setAiResult] = useState<any>(null);
   const [levelFilter, setLevelFilter] = useState('');
   const [matricNumberFilter, setMatricNumberFilter] = useState('');
@@ -86,7 +86,8 @@ export default function GradingPage() {
   };
 
   const getAiRecommendation = async (attemptId: string, questionId: string, responseText: string, questionText: string, markingScheme: any, maxMark: number) => {
-    setAiLoading(true);
+    const loadingKey = `${attemptId}:${questionId}`;
+    setAiLoadingKey(loadingKey);
     setAiResult(null);
     try {
       const res = await fetch('/api/ai/assess', {
@@ -130,7 +131,7 @@ export default function GradingPage() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'AI recommendation unavailable');
     } finally {
-      setAiLoading(false);
+      setAiLoadingKey((current) => current === loadingKey ? null : current);
     }
   };
 
@@ -290,8 +291,10 @@ export default function GradingPage() {
                         <Button size="sm" variant="outline" onClick={() => {
                           const ms = question?.markingSchemes?.[0] ?? { method: 'ai_recommendation', maxMark: item?.maxMark };
                           getAiRecommendation(selectedAttempt.id, pm.questionId, response?.currentText ?? '', question?.text ?? '', ms, item?.maxMark ?? 0);
-                        }} disabled={aiLoading}>
-                          {aiLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Brain className="h-3.5 w-3.5 mr-1" />}
+                        }} disabled={Boolean(aiLoadingKey)}>
+                          {aiLoadingKey === `${selectedAttempt.id}:${pm.questionId}`
+                            ? <Loader2 data-testid="ai-recommendation-spinner" className="h-3.5 w-3.5 animate-spin mr-1" />
+                            : <Brain data-testid="ai-recommendation-idle-icon" className="h-3.5 w-3.5 mr-1" />}
                           Get AI Recommendation
                         </Button>
                       </div>
