@@ -9,15 +9,15 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-4 pb-6 border-b', className)}>
-      <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight">{title}</h1>
+    <div className={cn('flex flex-col gap-3 pb-6 border-b sm:flex-row sm:items-start sm:justify-between sm:gap-4', className)}>
+      <div className="min-w-0">
+        <h1 className="break-words font-display text-2xl font-semibold tracking-tight">{title}</h1>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="mt-1 break-words text-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {actions && (
-        <div className="flex items-center gap-2 shrink-0">{actions}</div>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">{actions}</div>
       )}
     </div>
   )

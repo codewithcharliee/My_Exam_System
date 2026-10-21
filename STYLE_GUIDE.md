@@ -1,14 +1,27 @@
 ## Layout
 
-The root layout, `app/layout.tsx`, is the single place for app-wide providers and global infrastructure.
+The root layout, `app/layout.tsx`, defines the root document, global CSS, and fonts. Providers belong in the narrowest route layout that needs them so public pages do not load unnecessary client-side code.
 
-**Do not remove any existing entries without a reason.** Current infrastructure in the layout:
+Current provider responsibilities:
 
 | Entry | Purpose |
 |-------|---------|
-| `ThemeProvider` | Light/dark mode via `next-themes` |
-| `Toaster` | Global toast notifications via Sonner |
-| `ChunkLoadErrorHandler` | Required — prevents known ChunkLoadError race condition bug |
+| `ThemeProvider` | Light/dark mode via `next-themes`; supplied by `components/providers.tsx` in dashboard routes |
+| `Toaster` | Toast notifications via Sonner; supplied by `components/providers.tsx` in dashboard routes |
+| `ChunkLoadErrorHandler` | Required — prevents a known ChunkLoadError race condition; supplied by `components/providers.tsx` in dashboard routes |
+
+Keep providers at their current route scope unless a change deliberately updates the routes and features that depend on them.
+
+---
+
+## Responsive design
+
+- Build mobile-first with the existing Tailwind breakpoints. Prefer fluid widths, wrapping layouts, and `min-w-0` for flex/grid children over fixed viewport-dependent widths.
+- Keep 320 px screens usable; check at 320, 360, 375, 390, 430, 768, 1024, 1280, and 1440 px when validating broad layout changes.
+- Prevent page-level horizontal scrolling. Give intentionally wide tables or data grids a labelled, keyboard-accessible local horizontal scroll region.
+- Ensure buttons, form fields, dialogs, navigation, and exam controls remain visible, reachable, and usable with touch and keyboard input; reserve space for fixed/sticky controls and mobile safe areas.
+- Check long titles, identifiers, and error messages for wrapping or deliberate truncation without hiding essential information. Avoid adding custom media queries when responsive utilities suffice; when custom CSS is needed, keep it mobile-first and narrowly scoped.
+- After responsive changes, inspect affected public and authenticated routes at mobile, tablet, and desktop widths, including important interactive states. See `.github/instructions/responsive-design.instructions.md` for the project-wide verification checklist.
 
 ---
 

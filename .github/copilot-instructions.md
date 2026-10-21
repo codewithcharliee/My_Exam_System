@@ -6,7 +6,7 @@ This repo is a Next.js 16 App Router application for a secure online examination
 
 Important repo-specific context:
 - The app root for this project is the `next/` directory.
-- `app/layout.tsx` is the single place for cross-app infrastructure and global providers; do not remove or rearrange the existing provider entries without a clear reason.
+- `app/layout.tsx` owns the root document, global CSS, and fonts. Providers are scoped to the route groups that need them; keep them there unless a change deliberately updates those route requirements.
 - `AGENTS.md` and `CLAUDE.md` are project-level guardrails. In particular, this repo includes a custom Next.js warning: read the relevant docs in `node_modules/next/dist/docs/` before making code changes, because this version has behavior and conventions that differ from stock Next.js.
 
 ## Build, test, and lint commands
@@ -96,9 +96,15 @@ The app is built around an exam lifecycle rather than a generic CRUD app:
 
 ## Lighthouse quality target
 
-- Treat 100 in Lighthouse Performance, Accessibility, Best Practices, and SEO as the target for public routes. After changes that can affect user-facing pages, run a clean audit with extensions disabled and compare it with the previous baseline.
-- Fix actionable regressions before deployment; optimize assets based on measured impact, and preserve accessibility and application behavior while improving scores.
+- Treat 100 in Lighthouse Performance, Accessibility, Best Practices, and SEO as the target for representative public and authenticated routes. After changes that can affect user-facing pages, run clean audits with extensions disabled on affected routes and compare them with the previous baseline.
+- Fix actionable regressions before deployment; optimize assets based on measured impact, and preserve accessibility, responsive behavior, and application functionality while improving scores.
 - Lighthouse scores vary with network, browser, hosting, and test conditions. Never claim or guarantee a fixed score when it cannot be reproduced; report the exact audit conditions, results, and any external or non-actionable limits.
+
+## Responsive design quality target
+
+- Keep public, authentication, dashboard, and examination flows usable from 320 px mobile widths through large desktop viewports. Follow `.github/instructions/responsive-design.instructions.md` and `STYLE_GUIDE.md`.
+- For UI or layout changes, verify affected routes at narrow mobile, standard mobile, tablet, and desktop widths; check for page-level horizontal overflow, clipped controls or text, and content hidden behind fixed elements.
+- Preserve accessible keyboard/touch interactions and use local scrolling for wide tables or data grids instead of hiding page overflow. Fix measurable responsive regressions before deployment.
 
 ## When in doubt
 

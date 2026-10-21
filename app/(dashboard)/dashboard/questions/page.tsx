@@ -153,8 +153,8 @@ export default function QuestionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-display font-bold tracking-tight flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" /> Question Bank
           </h1>
@@ -166,7 +166,7 @@ export default function QuestionsPage() {
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Create Question</DialogTitle></DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Course</Label>
                   <Select value={form.courseId} onValueChange={(v: string) => {
@@ -198,7 +198,7 @@ export default function QuestionsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label>Difficulty</Label>
                   <Select value={form.difficulty} onValueChange={(v: string) => setForm({ ...form, difficulty: v })}>
@@ -213,7 +213,7 @@ export default function QuestionsPage() {
                 <div><Label>Topic</Label><Input value={form.topic} onChange={(e: any) => setForm({ ...form, topic: e.target.value })} placeholder="Topic" /></div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4"><div><Label>Word Target</Label><Input type="number" min="1" value={form.wordTarget} onChange={(e: any) => setForm({ ...form, wordTarget: e.target.value })} /></div><div><Label>Word Limit</Label><Input type="number" min="1" value={form.wordLimit} onChange={(e: any) => setForm({ ...form, wordLimit: e.target.value })} /></div></div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><div><Label>Word Target</Label><Input type="number" min="1" value={form.wordTarget} onChange={(e: any) => setForm({ ...form, wordTarget: e.target.value })} /></div><div><Label>Word Limit</Label><Input type="number" min="1" value={form.wordLimit} onChange={(e: any) => setForm({ ...form, wordLimit: e.target.value })} /></div></div>
 
               <div><Label>Question Text</Label><Textarea value={form.text} onChange={(e: any) => setForm({ ...form, text: e.target.value })} rows={4} required /></div>
 

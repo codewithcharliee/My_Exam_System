@@ -35,7 +35,17 @@ export default function CoursesPage() {
   };
 
   useEffect(() => {
-    fetchCourses();
+    const loadCourses = async () => {
+      try {
+        const res = await fetch('/api/courses');
+        if (res.ok) setCourses(await res.json());
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void loadCourses();
     fetch('/api/auth/session')
       .then((response) => response.json())
       .then(async (session) => {
@@ -137,8 +147,8 @@ export default function CoursesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-display font-bold tracking-tight flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" /> Course Management
           </h1>

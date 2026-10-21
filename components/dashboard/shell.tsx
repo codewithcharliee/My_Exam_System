@@ -89,22 +89,32 @@ export function DashboardShell({ user, children }: { user: any; children: React.
 
       {/* Sidebar */}
       <aside
+        id="dashboard-sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-[#1a2e5a] text-white transform transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
+          'fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-[#1a2e5a] text-white transform transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 border-b border-white/10 p-4">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#d4a017]/20 flex items-center justify-center">
                 <Shield className="h-5 w-5 text-[#d4a017]" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="font-display font-bold text-sm">Bingham University</h2>
                 <p className="text-xs text-white/60">Faculty of Law</p>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto text-white hover:bg-white/10 hover:text-white lg:hidden"
+              aria-label="Close navigation menu"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
 
           <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -153,12 +163,15 @@ export function DashboardShell({ user, children }: { user: any; children: React.
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-4 py-3 flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             className="lg:hidden"
+            aria-label="Open navigation menu"
+            aria-controls="dashboard-sidebar"
+            aria-expanded={sidebarOpen}
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
@@ -172,7 +185,7 @@ export function DashboardShell({ user, children }: { user: any; children: React.
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="mx-auto w-full min-w-0 max-w-7xl flex-1 p-4 md:p-6 lg:p-8">
           {children}
         </main>
       </div>

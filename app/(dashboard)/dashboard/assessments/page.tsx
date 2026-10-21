@@ -109,8 +109,8 @@ export default function AssessmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-display font-bold tracking-tight flex items-center gap-2">
             <ClipboardList className="h-6 w-6 text-primary" /> Assessments
           </h1>
@@ -124,7 +124,7 @@ export default function AssessmentsPage() {
               <DialogHeader><DialogTitle>Create Assessment</DialogTitle></DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div><Label>Title</Label><Input value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} required /></div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div><Label>Course</Label>
                     <Select value={form.courseId} onValueChange={(v: string) => {
                       setForm({ ...form, courseId: v });
@@ -144,13 +144,13 @@ export default function AssessmentsPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div><Label>Duration (min)</Label><Input type="number" value={form.durationMins} onChange={(e: any) => setForm({ ...form, durationMins: parseInt(e.target.value) || 120 })} /></div>
                   <div><Label>Start</Label><Input type="datetime-local" value={form.startAt} onChange={(e: any) => setForm({ ...form, startAt: e.target.value })} /></div>
                   <div><Label>End</Label><Input type="datetime-local" value={form.endAt} onChange={(e: any) => setForm({ ...form, endAt: e.target.value })} /></div>
                 </div>
 
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.randomizeQuestions} onChange={(e: any) => setForm({ ...form, randomizeQuestions: e.target.checked })} /> Randomize Questions</label>
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.randomizeOptions} onChange={(e: any) => setForm({ ...form, randomizeOptions: e.target.checked })} /> Randomize Options</label>
                 </div>
@@ -181,7 +181,7 @@ export default function AssessmentsPage() {
                           </label>
 
                           {selected && (
-                            <div className="grid grid-cols-2 gap-2 mt-2 pl-6">
+                            <div className="mt-2 grid grid-cols-1 gap-2 pl-6 sm:grid-cols-2">
                               <div>
                                 <Label className="text-xs">Max Mark</Label>
                                 <Input

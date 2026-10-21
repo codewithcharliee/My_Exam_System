@@ -33,10 +33,32 @@ export default function MonitoringPage() {
   }, []);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 10000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+    let isMounted = true;
+    const loadData = async () => {
+      try {
+        const [s, e, i] = await Promise.all([
+          fetch('/api/monitoring/active-sessions').then(r => r.json()),
+          fetch('/api/monitoring/events').then(r => r.json()),
+          fetch('/api/issue-reports').then(r => r.json()),
+        ]);
+        if (!isMounted) return;
+        setSessions(s ?? []);
+        setEvents(e ?? []);
+        setIssues(i ?? []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    void loadData();
+    const interval = setInterval(() => { void loadData(); }, 10000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const viewSnapshots = async (attemptId: string) => {
     setSelectedAttempt(attemptId);
@@ -68,8 +90,8 @@ export default function MonitoringPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-display font-bold tracking-tight flex items-center gap-2">
             <Monitor className="h-6 w-6 text-primary" /> Live Monitoring
           </h1>
