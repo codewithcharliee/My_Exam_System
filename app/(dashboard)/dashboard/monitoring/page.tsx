@@ -15,7 +15,26 @@ export default function MonitoringPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAttempt, setSelectedAttempt] = useState<string | null>(null);
   const [snapshots, setSnapshots] = useState<any[]>([]);
+  const [recentSnapshots, setRecentSnapshots] = useState<any[]>([]);
+  const [recentSnapshotsLoading, setRecentSnapshotsLoading] = useState(true);
+  const [recentSnapshotsError, setRecentSnapshotsError] = useState<string | null>(null);
   const [issues, setIssues] = useState<any[]>([]);
+
+  const fetchRecentSnapshots = useCallback(async () => {
+    try {
+      const response = await fetch('/api/monitoring/snapshots');
+      if (!response.ok) throw new Error(`Snapshot request failed (${response.status})`);
+      const data = await response.json();
+      if (!Array.isArray(data)) throw new Error('Snapshot response was not a list');
+      setRecentSnapshots(data);
+      setRecentSnapshotsError(null);
+    } catch (error) {
+      console.error('Unable to load recent snapshots:', error);
+      setRecentSnapshotsError('Could not load recent snapshots. Please try again.');
+    } finally {
+      setRecentSnapshotsLoading(false);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -34,6 +53,21 @@ export default function MonitoringPage() {
   }, []);
 
   useEffect(() => {
+    const loadRecentSnapshots = async () => {
+      try {
+        const response = await fetch('/api/monitoring/snapshots');
+        if (!response.ok) throw new Error(`Snapshot request failed (${response.status})`);
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Snapshot response was not a list');
+        setRecentSnapshots(data);
+      } catch (error) {
+        console.error('Unable to load recent snapshots:', error);
+        setRecentSnapshotsError('Could not load recent snapshots. Please try again.');
+      } finally {
+        setRecentSnapshotsLoading(false);
+      }
+    };
+    void loadRecentSnapshots();
     let isMounted = true;
     const loadData = async () => {
       try {
@@ -133,6 +167,38 @@ export default function MonitoringPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2"><Camera className="h-5 w-5" /> Recent Snapshots</CardTitle>
+          <Button variant="outline" size="sm" onClick={() => { setRecentSnapshotsLoading(true); void fetchRecentSnapshots(); }} disabled={recentSnapshotsLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${recentSnapshotsLoading ? 'animate-spin' : ''}`} /> Refresh
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {recentSnapshotsLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+          ) : recentSnapshotsError ? (
+            <p role="alert" className="text-destructive">{recentSnapshotsError}</p>
+          ) : recentSnapshots.length === 0 ? (
+            <p className="text-muted-foreground">No snapshots have been captured.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {recentSnapshots.map((snapshot: any) => (
+                <div key={snapshot.id} className="border rounded-lg overflow-hidden">
+                  {snapshot.imageData && <Image src={snapshot.imageData} alt="Candidate monitoring snapshot" width={320} height={240} unoptimized loading="lazy" decoding="async" className="aspect-video w-full object-cover" />}
+                  <div className="p-3 text-sm">
+                    <p className="font-medium">{snapshot?.attempt?.candidate?.name ?? 'Unknown candidate'}</p>
+                    <p className="text-muted-foreground">{snapshot?.attempt?.assessment?.title ?? 'Unknown examination'}</p>
+                    <p className="mt-2 text-xs text-muted-foreground"><SafeDate date={snapshot?.takenAt} options={{ timeStyle: 'medium' }} /></p>
+                    {snapshot?.monitoringEvent?.eventType && <p className="mt-1 text-xs text-muted-foreground">Trigger: {snapshot.monitoringEvent.eventType}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
