@@ -97,15 +97,9 @@ export default function LoginPage() {
             ))}
           </div>
 
-          <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-xl border border-slate-200/80 bg-white/70 px-5 py-4 text-center sm:flex-row sm:text-left">
-            <div>
-              <p className="text-sm font-semibold text-[#1a2e5a]">New student?</p>
-              <p className="mt-0.5 text-sm text-slate-600">Create your account to get started.</p>
-            </div>
-            <Link href="/signup" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#1a2e5a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#243e73] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4a017] focus-visible:ring-offset-2">
-              Register
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="mt-8 rounded-xl border border-slate-200/80 bg-white/70 px-5 py-4 text-center">
+            <p className="text-sm font-semibold text-[#1a2e5a]">Need a student profile?</p>
+            <p className="mt-0.5 text-sm text-slate-600">Only authorized university staff can create profiles. Contact your department for access.</p>
           </div>
         </div>
       </section>

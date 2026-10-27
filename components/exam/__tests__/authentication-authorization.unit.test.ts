@@ -60,6 +60,26 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+vi.mock('@/lib/audit', () => ({
+  createAuditEvent: vi.fn(async (input: {
+    actorId: string | null;
+    actionType: string;
+    entityType?: string;
+    entityId?: string;
+    reason?: string;
+    metadata?: Record<string, unknown>;
+  }) => {
+    const event = {
+      id: `h03-audit-${state.auditEvents.length + 1}`,
+      ...input,
+      metadataJson: JSON.stringify(input.metadata ?? {}),
+      occurredAt: new Date(),
+    };
+    state.auditEvents.push(event);
+    return event;
+  }),
+}));
+
 vi.mock('@/auth', () => ({
   auth: vi.fn(async () => state.session),
 }));
@@ -76,6 +96,7 @@ import { GET as getAttempt } from '@/app/api/attempts/[id]/route';
 import { POST as submitAttempt } from '@/app/api/attempts/[id]/submit/route';
 import { PATCH as saveGrade } from '@/app/api/grading/[attemptId]/[questionId]/route';
 import { POST as assessWithAi } from '@/app/api/ai/assess/route';
+import { POST as publicSignup } from '@/app/api/signup/route';
 import { authorizeCredentials } from '@/lib/credential-auth';
 import { prisma } from '@/lib/prisma';
 
@@ -233,6 +254,32 @@ describe('H03 — authentication and authorization against real handlers', () =>
     const auditEvent = state.auditEvents.at(-1);
     expect(auditEvent).toBeDefined();
     expect(auditRow(auditEvent!, `h03-${role}`, 'login_success', 'allowed')).toBe(true);
+  });
+
+  it('rejects public profile creation and audits the disabled signup endpoint', async () => {
+    const userCountBefore = state.users.length;
+
+    for (const role of [null, 'candidate', 'admin'] as const) {
+      state.session = role ? { user: { id: `h03-${role}`, role } } : null;
+      const response = await publicSignup(request('http://localhost/api/signup', {
+        name: 'Unapproved Student',
+        email: 'unapproved@example.test',
+        password: testPassword,
+        matricNumber: 'BHU/25/LAW/001',
+      }));
+
+      expect(response.status).toBe(403);
+      expect(await response.json()).toMatchObject({
+        error: 'Public registration is disabled. Contact authorized staff to create a profile.',
+      });
+      expect(state.users).toHaveLength(userCountBefore);
+      const event = state.auditEvents.at(-1);
+      expect(event).toBeDefined();
+      expect(event!.actionType).toBe('authorization_denied');
+      expect(auditMetadata(event!).action).toBe('public_signup');
+      expect(auditMetadata(event!).outcome).toBe('denied');
+      record(`public registration by ${role ?? 'anonymous'}`, role ?? 'anonymous', 'create profile', '403; no change', '403; no change');
+    }
   });
 
   it.each([

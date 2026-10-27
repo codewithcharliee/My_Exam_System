@@ -14,7 +14,6 @@ import { dashboardPathForRole, isUserRole, type LoginPortal } from '@/lib/role-a
 
 export function LoginForm({ portal }: { portal: LoginPortal }) {
   const router = useRouter();
-  const isStudentPortal = portal === 'candidate';
   const portalLabels: Record<LoginPortal, string> = {
     admin: 'Admin Portal',
     exam_officer: 'Exam Officer Portal',
@@ -125,11 +124,9 @@ export function LoginForm({ portal }: { portal: LoginPortal }) {
               </Button>
             </form>
             <div className="mt-4 text-center text-sm text-muted-foreground">
-              {isStudentPortal ? (
-                <>New student? <Link href="/signup" className="text-primary hover:underline font-medium">Create an account</Link></>
-              ) : (
-                <Link href="/login" className="text-primary hover:underline font-medium">Choose another role portal</Link>
-              )}
+              {portal === 'candidate'
+                ? 'Need access? Contact an authorized staff member to have your profile created.'
+                : <Link href="/login" className="text-primary hover:underline font-medium">Choose another role portal</Link>}
             </div>
             <div className="mt-3 text-center text-sm">
               <Link href="/" className="text-muted-foreground hover:underline">Back to home</Link>

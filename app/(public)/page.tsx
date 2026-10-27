@@ -39,11 +39,8 @@ export default function HomePage() {
               <a href="/login/admin" className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-white/40 bg-white/5 px-6 text-base font-medium text-white transition-all duration-fast hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]">
                 <Shield className="h-4 w-4" aria-hidden="true" /> Admin Portal
               </a>
-              <a href="/signup" className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#e5bd55]/60 bg-transparent px-6 text-base font-medium text-[#e5bd55] transition-all duration-fast hover:bg-[#e5bd55]/10 hover:text-[#e5bd55] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]">
-                <Users className="h-4 w-4" aria-hidden="true" /> Register
-              </a>
             </div>
-            <p className="mt-5 text-sm text-white/60">The Admin Portal is for authorized administrators and staff.</p>
+            <p className="mt-5 text-sm text-white/60">Profiles are created by authorized university staff. The Admin Portal is for authorized administrators and staff.</p>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur-sm sm:p-9">
             <h2 className="text-lg font-semibold text-white">One platform, dedicated portals</h2>
