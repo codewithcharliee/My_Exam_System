@@ -10,10 +10,22 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Dev chunk URLs are not content-hashed, so a cached copy outlives an edit.
   async headers() {
-    if (process.env.NODE_ENV !== 'development') return [];
-    return [{ source: '/_next/static/:path*', headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }] }];
+    const headers = [];
+    if (process.env.NODE_ENV === 'production') {
+      headers.push({
+        source: '/:path*',
+        headers: [{ key: 'Strict-Transport-Security', value: 'max-age=31536000' }],
+      });
+    }
+    // Dev chunk URLs are not content-hashed, so a cached copy outlives an edit.
+    if (process.env.NODE_ENV === 'development') {
+      headers.push({
+        source: '/_next/static/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      });
+    }
+    return headers;
   },
   // Next 16 BLOCKS unlisted origins on /_next/* and /__nextjs* in dev — including the /_next/hmr
   // WEBSOCKET upgrade, and Turbopack gates client module wiring on that socket, so a blocked origin
